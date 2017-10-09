@@ -1,5 +1,5 @@
 all:
-	gcc *.c -o myserver -static -O3 -Wall 
+	g++ *.cpp -o myserver -static -O3 -Wall 
 	
 clean:
 	rm -f $(binaries) *.o
