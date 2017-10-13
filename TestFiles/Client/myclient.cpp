@@ -13,7 +13,7 @@
 
 using namespace std;
 
-int main (int argc, char **argv) 
+int main (int argc, char **argv)
 {
 	int create_socket;
 	char buffer[BUF], receiver[BUF];
@@ -21,6 +21,7 @@ int main (int argc, char **argv)
 	int size;
 	int menu;
 	string temp;
+	int number_of_messages;
 
 	if( argc < 3 ){
 		cout << "Usage: " << argv[0] << " ServerAdresse + Port Number" << endl;
@@ -56,7 +57,7 @@ int main (int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	do 
+	do
 	{
 		cout << "Choose operation: " << endl;
 		cout << "SEND: Send a message" << endl;
@@ -73,10 +74,10 @@ int main (int argc, char **argv)
 		{
 			receiver[size] = '\0';
 			menu = atoi(receiver);
-			
+
 			switch(menu)
 			{
-				case 1: 
+				case 1:{
 					do
 					{
 						cout << "Please enter sender name: ";
@@ -85,6 +86,11 @@ int main (int argc, char **argv)
 						size = recv(create_socket, receiver, BUF-1, 0);
 						receiver[size] = '\0';
 						temp = receiver;
+
+						if(temp == "ERR")
+						{
+							cout << "ERR: Max 8 Characters and no Special Characters" << endl; // ERROR MESSAGE
+						}
 					} while(temp == "ERR");
 					do
 					{
@@ -94,6 +100,11 @@ int main (int argc, char **argv)
 						size = recv(create_socket, receiver, BUF-1, 0);
 						receiver[size] = '\0';
 						temp = receiver;
+
+						if(temp == "ERR")
+						{
+							cout << "ERR: Max 8 Characters and no Special Characters" << endl; // ERROR MESSAGE
+						}
 					} while(temp == "ERR");
 					do
 					{
@@ -103,6 +114,11 @@ int main (int argc, char **argv)
 						size = recv(create_socket, receiver, BUF-1, 0);
 						receiver[size] = '\0';
 						temp = receiver;
+
+						if(temp == "ERR")
+						{
+							cout << "ERR: Max 80 Characters" << endl; // ERROR MESSAGE
+						}
 					} while(temp == "ERR");
 					cout << "Please enter your message:" << endl;;
 					do
@@ -110,7 +126,87 @@ int main (int argc, char **argv)
 						fgets(buffer, BUF, stdin);
 						send(create_socket, buffer, strlen(buffer), 0);
 					} while((buffer[0] != '.') && (buffer[1] != '\n'));
-					break;
+
+					size = recv(create_socket, receiver, BUF-1, 0);
+					receiver[size] = '\0';
+					temp = receiver;
+
+					if(temp == "ERR")
+					{
+						cout << "ERR: Could not send\n" << endl; // ERROR MESSAGE
+					}
+					else
+					{
+						cout << "OK: Message sent\n" << endl; // SUCCESS
+					}
+					break;}
+				case 2:{
+                    cout << "Please enter user name: ";
+                    fgets(buffer, BUF, stdin);
+                    send(create_socket, buffer, strlen(buffer), 0);
+
+                    size = recv(create_socket, receiver, BUF-1, 0);
+                    receiver[size] = '\0';
+                    send(create_socket, buffer, strlen(buffer), 0);
+                    temp = receiver;
+
+                    if(temp != "ERR")
+                    {
+                        number_of_messages = temp.length() > 0 ? stoi(temp) : 0;
+
+                        for(int i = 0; i < number_of_messages; ++i)
+                        {
+                            cout << "#" << i + 1;
+
+                            size = recv(create_socket, receiver, BUF-1, 0);
+                            receiver[size] = '\0';
+                            send(create_socket, buffer, strlen(buffer), 0);
+                            temp = receiver;
+
+                            cout << ": Sender: " << temp;
+
+                            size = recv(create_socket, receiver, BUF-1, 0);
+                            receiver[size] = '\0';
+                            send(create_socket, buffer, strlen(buffer), 0);
+                            temp = receiver;
+
+                            cout << ", Object: " << temp << endl;
+                        }
+                    }
+                    else
+                    {
+                        cout << "ERR: No messages for this user found.\n" << endl;
+                    }
+
+                    break;}
+				case 3:{
+                    cout << "Please enter a user name: ";
+                    fgets(buffer, BUF, stdin);
+                    send(create_socket, buffer, strlen(buffer), 0);
+
+                    cout << "Please enter a post number: ";
+                    fgets(buffer, BUF, stdin);
+                    send(create_socket, buffer, strlen(buffer), 0);
+		    temp = "";
+		    char dump[2] = { 'O', 'K' };
+
+                    do
+                    {
+                        size = recv(create_socket, buffer, BUF-1, 0);
+                        buffer[size] = '\0';
+                    	send(create_socket, dump, strlen(dump), 0);
+
+                        if((buffer[0] != '.') && (buffer[1] != '\n'))
+                        {
+                            temp += buffer;
+                        }
+                    } while((buffer[0] != '.') && (buffer[1] != '\n') && (temp != "ERR"));
+
+                    cout << "\n------------------\n" << endl;
+                    cout << temp << endl;
+                    cout << "------------------\n" << endl;
+
+                    break;}
 				default: break;
 			}
 		}
@@ -119,3 +215,4 @@ int main (int argc, char **argv)
 	close (create_socket);
 	return EXIT_SUCCESS;
 }
+
