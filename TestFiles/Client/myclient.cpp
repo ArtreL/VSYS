@@ -187,8 +187,8 @@ int main (int argc, char **argv)
                     cout << "Please enter a post number: ";
                     fgets(buffer, BUF, stdin);
                     send(create_socket, buffer, strlen(buffer), 0);
-		    temp = "";
-		    char dump[2] = { 'O', 'K' };
+					temp = "";
+					char dump[2] = { 'O', 'K' };
 
                     do
                     {
@@ -207,7 +207,21 @@ int main (int argc, char **argv)
                     cout << "------------------\n" << endl;
 
                     break;}
-				default: break;
+				case 4:{
+					cout << "Please enter a user name: ";
+                    fgets(buffer, BUF, stdin);
+                    send(create_socket, buffer, strlen(buffer), 0);
+
+                    cout << "Please enter a post number: ";
+                    fgets(buffer, BUF, stdin);
+                    send(create_socket, buffer, strlen(buffer), 0);
+					temp = "";
+					
+					
+					break;}
+				default: 
+					cout << "default case" << endl;
+					break;
 			}
 		}
 	}while (strcmp (buffer, "quit\n") != 0);

@@ -9,6 +9,7 @@
 #include <iostream>
 #include <fstream>
 #include <regex>
+#include <cstdio>
 #define BUF 1024
 #define PORT 6543
 
@@ -33,12 +34,7 @@ int main (void) {
 	address.sin_addr.s_addr = INADDR_ANY;
 	address.sin_port = htons (PORT);
 	int x = 1;
-	int a = setsockopt(create_socket, SOL_SOCKET, SO_REUSEADDR, &x, sizeof(int*));
-
-	if(a == 123090321)
-    {
-        cout << "Okay des is weird" << endl;
-    }
+	setsockopt(create_socket, SOL_SOCKET, SO_REUSEADDR, &x, sizeof(int*));
 
 	if (bind ( create_socket, (struct sockaddr *) &address, sizeof (address)) != 0)
 	{
@@ -81,28 +77,29 @@ int main (void) {
 				bool check = false;
 				ifstream MessageIn;
 				ofstream MessageOut;
-				string file_content;
-				string file_substr;
-				string file_output;
-				int message_number;
+				string file_content = "";
+				string file_substr = "";
+				string file_output = "";
+				int message_number = 0;
 
-				string list_user;
-				int number_of_messages;
-				string list_sender;
-				string list_object;
-				char dump_array[1];
+				string list_user = "";
+				int number_of_messages = 0;
+				string list_sender = "";
+				string list_object = "";
+				char dump_array[1] = {'a'};
 
-				string read_user;
-				int read_postnumber;
+				string read_user = "";
+				int read_postnumber = 0;
 				string read_sender = "";
 				string read_object = "";
 				string read_message = "";
-				string read_result;
-				int read_subend;
+				string read_result = "";
+				int read_subend = 0;
 
-				string delete_user;
-				int delete_postnumber;
-				string delete_output;
+				string delete_user = "";
+				int delete_postnumber = 0;
+				string delete_output = "";
+				int delete_index = 0;
 
 				switch(input_type)
 				{
@@ -425,13 +422,46 @@ int main (void) {
                             file_substr = file_substr.substr(0, file_substr.find("#####"));
                             number_of_messages = file_substr.length() > 0 ? stoi(file_substr) : 0;
 
-                            if(delete_postnumber <= number_of_messages)
+                            if((number_of_messages == 1) && (delete_postnumber == 1))
+							{
+								temp = "data/" + delete_user + ".txt";
+								remove(temp.c_str());
+							}
+							else if(delete_postnumber <= number_of_messages)
                             {
-                                file_substr = file_content.substr(file_content.find("#####") + 5, file_content.length());
+                                file_substr = file_content.substr(file_content.find("#####"), file_content.length());
 
                                 for(int i = 0; i < number_of_messages; ++i)
                                 {
+									if((i + 1) != delete_postnumber)
+									{
+										delete_output += (i + 1) == number_of_messages ? "#***#" : "##*##";
+										delete_output += to_string(delete_index + 1);
+										++delete_index;
+										temp = (i + 2) == number_of_messages ? "#***#" : "##*##";
+										delete_output += file_substr.substr(0, file_substr.find(temp));
+									}
+									file_substr = file_substr.substr(file_substr.find(temp) + 5, file_substr.length());
+									file_substr = file_substr.substr(file_substr.find("#####"), file_substr.length());
                                 }
+								
+								MessageOut.open("data/" + delete_user + ".txt");
+
+								if(MessageOut.is_open())
+								{
+									MessageOut << delete_output;
+									MessageOut.close();
+
+									strncpy(buffer, "OK", sizeof(buffer));
+								}
+								else
+								{
+									strncpy(buffer, "ERR", sizeof(buffer));
+								}
+
+								send(new_socket, buffer, strlen(buffer),0);
+
+								cout << "OPERATION FINISHED\nWaiting for new Input...\n" << endl;
                             }
                             else
                             {
@@ -448,8 +478,8 @@ int main (void) {
                         }
 						break;}
 					case 5:
-						cout << "I'm quitting here!" << endl;
-						return 0;
+						cout << "Client disconnected from the server.\n" << endl;
+						
 						break;
 					default:
 						cout << "No Matching Operation Found" << endl;
