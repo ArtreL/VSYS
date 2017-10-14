@@ -53,7 +53,7 @@ int main (void) {
 
 		if (new_socket > 0)
 		{
-			strbuf = "Welcome to myserver, Please enter your command:\n";
+			strbuf = "\nWelcome to myserver, please enter your command:\n";
 			cout << "Client connected from " << inet_ntoa(cliaddress.sin_addr) << ":" << ntohs(cliaddress.sin_port)<< "..." << endl;
 			strncpy(buffer, strbuf.c_str(), sizeof(buffer));
 			send(new_socket, strbuf.c_str(), strlen(buffer),0);

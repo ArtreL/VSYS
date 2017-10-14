@@ -22,13 +22,14 @@ int main (int argc, char **argv)
 	int menu;
 	string temp;
 	int number_of_messages;
-
-	if( argc < 3 ){
+	
+	/* on missing arguments display usage error message */
+	if(argc < 3){
 		cout << "Usage: " << argv[0] << " ServerAdresse + Port Number" << endl;
 		exit(EXIT_FAILURE);
 	}
 
-	if ((create_socket = socket (AF_INET, SOCK_STREAM, 0)) == -1)
+	if((create_socket = socket (AF_INET, SOCK_STREAM, 0)) == -1)
 	{
 		perror("Socket error");
 		return EXIT_FAILURE;
@@ -39,13 +40,14 @@ int main (int argc, char **argv)
 	int user_port = atoi(argv[2]);
 	address.sin_port = htons (user_port);
 	inet_aton (argv[1], &address.sin_addr);
-
-	if (connect ( create_socket, (struct sockaddr *) &address, sizeof (address)) == 0)
+	
+	/* Error / Confirmation message on (un-)successful connection */
+	if(connect (create_socket, (struct sockaddr *) &address, sizeof(address)) == 0)
 	{
 		cout << "Connection with server " << inet_ntoa(address.sin_addr) << " established" << endl;
 		size = recv(create_socket,buffer,BUF-1, 0);
 
-		if (size>0)
+		if (size > 0)
 		{
 			buffer[size]= '\0';
 			cout << buffer << endl;
@@ -56,15 +58,18 @@ int main (int argc, char **argv)
 		cout << "Connect error - no server available" << endl;
 		return EXIT_FAILURE;
 	}
-
+	
 	do
 	{
+		/* Menu */
 		cout << "Choose operation: " << endl;
 		cout << "SEND: Send a message" << endl;
 		cout << "LIST: List all messages from a user" << endl;
 		cout << "READ: Find a user's message by its number" << endl;
-		cout << "DEL: Delete one message" << endl;
-		cout << "QUIT: Logout" << endl;
+		cout << "DEL : Delete one message" << endl;
+		cout << "QUIT: Logout\n" << endl;
+		
+		/* take input and send it to server */
 		fgets(buffer, BUF, stdin);
 		send(create_socket, buffer, strlen(buffer), 0);
 
