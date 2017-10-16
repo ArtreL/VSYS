@@ -16,6 +16,7 @@
 using namespace std;
 
 string StringToLower(char value[]);
+string CutFromString(string input, string pattern);
 
 int main (void) {
 	int create_socket, new_socket;
@@ -61,6 +62,8 @@ int main (void) {
 
 		do
 		{
+
+            memset(buffer, 0, sizeof(buffer));
 			//cout << "Waiting on Input" << endl;
 			size = recv(new_socket, buffer, BUF-1, 0);
 			//cout << "Got some Input" << endl;
@@ -158,7 +161,12 @@ int main (void) {
 						{
 							size = recv(new_socket, buffer, BUF-1, 0);
 							buffer[size - 1] = '\0';
-							send_information[2] = buffer;
+							temp = buffer;
+							temp = CutFromString(temp, "#####");
+							temp = CutFromString(temp, "##*##");
+							temp = CutFromString(temp, "#***#");
+
+							send_information[2] = temp;
 							if(size > 81)
 							{
 								strncpy(buffer, "ERR", sizeof(buffer));
@@ -183,6 +191,11 @@ int main (void) {
 								temp += buffer;
 							}
 						} while((buffer[0] != '.') && (buffer[1] != '\n'));
+
+						temp = CutFromString(temp, "#####");
+						temp = CutFromString(temp, "##*##");
+						temp = CutFromString(temp, "#***#");
+
 						send_information[3] = temp;
 						cout << "Message:\n" << send_information[3];
 
@@ -308,15 +321,19 @@ int main (void) {
                         buffer[size - 1] = '\0';
                         read_user = buffer;
 
-                        size = recv(new_socket, buffer, BUF-1, 0);
-                        buffer[size - 1] = '\0';
-                        temp = buffer;
-                        read_postnumber = temp.length() > 0 ? stoi(temp) : 0;
-
                         MessageIn.open("data/" + read_user + ".txt");
 
                         if(MessageIn.is_open())
 						{
+                            temp = "OK";
+                            strncpy(buffer,temp.c_str(), sizeof(buffer));
+                            send(new_socket, buffer, strlen(buffer),0);
+
+                            size = recv(new_socket, buffer, BUF-1, 0);
+                            buffer[size - 1] = '\0';
+                            temp = buffer;
+                            read_postnumber = temp.length() > 0 ? stoi(temp) : 0;
+
 							file_content = "";
 
 							while(getline(MessageIn, temp))
@@ -333,6 +350,10 @@ int main (void) {
 
                             if(read_postnumber <= number_of_messages)
                             {
+                                temp = "OK";
+                                strncpy(buffer,temp.c_str(), sizeof(buffer));
+                                send(new_socket, buffer, strlen(buffer),0);
+
                                 file_substr = file_content.substr(file_content.find("#####") + 5, file_content.length());
 
                                 for(int i = 0; i < number_of_messages; ++i)
@@ -357,6 +378,8 @@ int main (void) {
                                 read_result = "Sender: " + read_sender + "\nObject: " + read_object + "\nMessage:" + read_message;
                                 cout << read_result << endl;
 
+                                recv(new_socket, buffer, BUF-1, 0);
+
                                 while(read_result.length() > 1)
                                 {
                                     read_subend = read_result.length() > BUF ? BUF : read_result.length();
@@ -376,14 +399,14 @@ int main (void) {
                             else
                             {
                                 // SEND ERROR TO CLIENT
-                                strncpy(buffer, "ERR\n", sizeof(buffer));
+                                strncpy(buffer, "ERR", sizeof(buffer));
                                 send(new_socket, buffer, strlen(buffer),0);
                             }
                         }
                         else
                         {
                             // SEND ERROR TO CLIENT
-                            strncpy(buffer, "ERR\n", sizeof(buffer));
+                            strncpy(buffer, "ERR", sizeof(buffer));
 							send(new_socket, buffer, strlen(buffer),0);
                         }
 						break;}
@@ -444,7 +467,7 @@ int main (void) {
 									file_substr = file_substr.substr(file_substr.find(temp) + 5, file_substr.length());
 									file_substr = file_substr.substr(file_substr.find("#####"), file_substr.length());
                                 }
-								
+
 								MessageOut.open("data/" + delete_user + ".txt");
 
 								if(MessageOut.is_open())
@@ -477,13 +500,20 @@ int main (void) {
 							send(new_socket, buffer, strlen(buffer),0);
                         }
 						break;}
-					case 5:
+					case 5:{
 						cout << "Client disconnected from the server.\n" << endl;
-						
-						break;
-					default:
+
+						break;}
+					default:{
+						/*--------------------------*/
+						/*      SEND OPERATION      */
+						/*--------------------------*/
+
+						strncpy(buffer,"0", sizeof(buffer));
+						send(new_socket, buffer, strlen(buffer),0);
+
 						cout << "No Matching Operation Found" << endl;
-						break;
+						break;}
 				}
 			}
 			else if (size == 0)
@@ -497,7 +527,7 @@ int main (void) {
 				return EXIT_FAILURE;
 			}
 			//cout << "At the end of the while loop" << endl;
-		} while (strncmp (buffer, "quit", 4)  != 0);
+		} while (strncmp (buffer, "quit", 4) != 0);
 
 		close (new_socket);
 	}
@@ -520,6 +550,28 @@ string StringToLower(char value[])
 	} while((value[i] != '\0') && (value[i] != '\n'));
 
 	output.resize(i);
+
+	return output;
+}
+
+string CutFromString(string input, string pattern)
+{
+    string output = "";
+    int loop = 0;
+
+    if(input.find(pattern) != string::npos)
+    {
+        do
+        {
+            output += input.substr(0, input.find(pattern));
+            input = loop == 2 ? input : input.substr(input.find(pattern) + pattern.length(), input.length());
+            loop = input.find(pattern) != string::npos ? 1 : (loop == 2 ? 0 : 2);
+        }while(loop > 0);
+    }
+    else
+    {
+        output = input;
+    }
 
 	return output;
 }

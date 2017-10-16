@@ -22,7 +22,7 @@ int main (int argc, char **argv)
 	int menu;
 	string temp;
 	int number_of_messages;
-	
+
 	/* on missing arguments display usage error message */
 	if(argc < 3){
 		cout << "Usage: " << argv[0] << " ServerAdresse + Port Number" << endl;
@@ -40,7 +40,7 @@ int main (int argc, char **argv)
 	int user_port = atoi(argv[2]);
 	address.sin_port = htons (user_port);
 	inet_aton (argv[1], &address.sin_addr);
-	
+
 	/* Error / Confirmation message on (un-)successful connection */
 	if(connect (create_socket, (struct sockaddr *) &address, sizeof(address)) == 0)
 	{
@@ -58,7 +58,7 @@ int main (int argc, char **argv)
 		cout << "Connect error - no server available" << endl;
 		return EXIT_FAILURE;
 	}
-	
+
 	do
 	{
 		/* Menu */
@@ -68,7 +68,9 @@ int main (int argc, char **argv)
 		cout << "READ: Find a user's message by its number" << endl;
 		cout << "DEL : Delete one message" << endl;
 		cout << "QUIT: Logout\n" << endl;
-		
+
+		memset(buffer, 0, sizeof(buffer));
+
 		/* take input and send it to server */
 		fgets(buffer, BUF, stdin);
 		send(create_socket, buffer, strlen(buffer), 0);
@@ -83,6 +85,7 @@ int main (int argc, char **argv)
 			switch(menu)
 			{
 				case 1:{
+					/* CASE SEND */
 					do
 					{
 						cout << "Please enter sender name: ";
@@ -146,17 +149,18 @@ int main (int argc, char **argv)
 					}
 					break;}
 				case 2:{
+					/* CASE LIST */
                     cout << "Please enter user name: ";
                     fgets(buffer, BUF, stdin);
                     send(create_socket, buffer, strlen(buffer), 0);
 
                     size = recv(create_socket, receiver, BUF-1, 0);
                     receiver[size] = '\0';
-                    send(create_socket, buffer, strlen(buffer), 0);
                     temp = receiver;
 
                     if(temp != "ERR")
                     {
+                        send(create_socket, buffer, strlen(buffer), 0);
                         number_of_messages = temp.length() > 0 ? stoi(temp) : 0;
 
                         for(int i = 0; i < number_of_messages; ++i)
@@ -185,34 +189,59 @@ int main (int argc, char **argv)
 
                     break;}
 				case 3:{
+					/* CASE READ */
                     cout << "Please enter a user name: ";
                     fgets(buffer, BUF, stdin);
                     send(create_socket, buffer, strlen(buffer), 0);
 
-                    cout << "Please enter a post number: ";
-                    fgets(buffer, BUF, stdin);
-                    send(create_socket, buffer, strlen(buffer), 0);
-					temp = "";
-					char dump[2] = { 'O', 'K' };
+                    size = recv(create_socket, buffer, BUF-1, 0);
+                    buffer[size] = '\0';
+                    temp = buffer;
 
-                    do
+                    if(temp != "ERR")
                     {
+                        cout << "Please enter a post number: ";
+                        fgets(buffer, BUF, stdin);
+                        send(create_socket, buffer, strlen(buffer), 0);
+                        temp = "";
+
                         size = recv(create_socket, buffer, BUF-1, 0);
                         buffer[size] = '\0';
-                    	send(create_socket, dump, strlen(dump), 0);
+                        temp = buffer;
 
-                        if((buffer[0] != '.') && (buffer[1] != '\n'))
+                        send(create_socket, buffer, strlen(buffer), 0);
+
+                        if(temp != "ERR")
                         {
-                            temp += buffer;
-                        }
-                    } while((buffer[0] != '.') && (buffer[1] != '\n') && (temp != "ERR"));
+                            do
+                            {
+                                size = recv(create_socket, buffer, BUF-1, 0);
+                                buffer[size] = '\0';
+                                send(create_socket, buffer, strlen(buffer), 0);
 
-                    cout << "\n------------------\n" << endl;
-                    cout << temp << endl;
-                    cout << "------------------\n" << endl;
+                                if((buffer[0] != '.') && (buffer[1] != '\n'))
+                                {
+                                    temp += buffer;
+                                }
+                            } while((buffer[0] != '.') && (buffer[1] != '\n') && (temp != "ERR"));
+
+                            cout << "\n------------------\n" << endl;
+                            cout << temp << endl;
+                            cout << "------------------\n" << endl;
+                        }
+                        else
+                        {
+                            cout << "ERR: No message under this number found.\n" << endl;
+                        }
+                    }
+                    else
+                    {
+                        cout << "ERR: No messages for this user found.\n" << endl;
+                    }
 
                     break;}
 				case 4:{
+					/* CASE DEL */
 					cout << "Please enter a user name: ";
                     fgets(buffer, BUF, stdin);
                     send(create_socket, buffer, strlen(buffer), 0);
@@ -221,10 +250,10 @@ int main (int argc, char **argv)
                     fgets(buffer, BUF, stdin);
                     send(create_socket, buffer, strlen(buffer), 0);
 					temp = "";
-					
-					
+
+
 					break;}
-				default: 
+				default:
 					cout << "default case" << endl;
 					break;
 			}
