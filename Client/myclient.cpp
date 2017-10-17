@@ -13,6 +13,8 @@
 
 using namespace std;
 
+void PrintHorrorzontal();
+
 int main (int argc, char **argv)
 {
 	int create_socket;
@@ -98,7 +100,7 @@ int main (int argc, char **argv)
 			{
 				case 1:{
 					/* CASE SEND */
-                    cout << "\n------------------\n" << endl;
+					PrintHorrorzontal();
 					do
 					{
 						cout << "Please enter sender name: ";
@@ -152,7 +154,7 @@ int main (int argc, char **argv)
 					receiver[size] = '\0';
 					temp = receiver;
 
-                    cout << "\n------------------\n" << endl;
+					PrintHorrorzontal();
 
 					if(temp == "ERR")
 					{
@@ -163,12 +165,10 @@ int main (int argc, char **argv)
 						cout << "OK: Message sent" << endl; // SUCCESS
 					}
 
-                    cout << "\n------------------\n" << endl;
-
 					break;}
 				case 2:{
 					/* CASE LIST */
-                    cout << "\n------------------\n" << endl;
+			PrintHorrorzontal();
                     cout << "Please enter user name: ";
                     fgets(buffer, BUF, stdin);
                     send(create_socket, buffer, strlen(buffer), 0);
@@ -181,7 +181,7 @@ int main (int argc, char **argv)
                     {
                         send(create_socket, buffer, strlen(buffer), 0);
                         number_of_messages = temp.length() > 0 ? stoi(temp) : 0;
-                        cout << "\n------------------\n" << endl;
+			PrintHorrorzontal();
 
                         for(int i = 0; i < number_of_messages; ++i)
                         {
@@ -200,8 +200,6 @@ int main (int argc, char **argv)
 
                             cout << ", Object: " << temp << endl;
                         }
-
-                        cout << "\n------------------\n" << endl;
                     }
                     else
                     {
@@ -211,7 +209,7 @@ int main (int argc, char **argv)
                     break;}
 				case 3:{
 					/* CASE READ */
-                    cout << "\n------------------\n" << endl;
+			PrintHorrorzontal();
                     cout << "Please enter a user name: ";
                     fgets(buffer, BUF, stdin);
                     send(create_socket, buffer, strlen(buffer), 0);
@@ -249,9 +247,8 @@ int main (int argc, char **argv)
                                 }
                             } while((buffer[0] != '.') && (buffer[1] != '\n') && (temp != "ERR"));
 
-                            cout << "\n------------------\n" << endl;
+				PrintHorrorzontal();
                             cout << temp << endl;
-                            cout << "------------------\n" << endl;
                         }
                         else
                         {
@@ -266,7 +263,7 @@ int main (int argc, char **argv)
                     break;}
 				case 4:{
 					/* CASE DEL */
-                    cout << "\n------------------\n" << endl;
+			PrintHorrorzontal();
 					cout << "Please enter a user name: ";
                     fgets(buffer, BUF, stdin);
                     send(create_socket, buffer, strlen(buffer), 0);
@@ -310,5 +307,15 @@ int main (int argc, char **argv)
 
 	close (create_socket);
 	return EXIT_SUCCESS;
+}
+
+void PrintHorrorzontal()
+{
+	cout << "\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B";
+	cout << "\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B";
+	cout << "\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B";
+	cout << "\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B";
+	cout << "\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B";
+	cout << "\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B" << endl;
 }
 

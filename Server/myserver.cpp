@@ -1,6 +1,7 @@
 /* myserver.cpp */
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
@@ -10,32 +11,65 @@
 #include <fstream>
 #include <regex>
 #include <cstdio>
+#include <dirent.h> // Make Directory
 #define BUF 1024
 #define PORT 6543
 
 using namespace std;
 
+// Some functions used in the program
 string StringToLower(char value[]);
 string CutFromString(string input, string pattern);
 int StringNewlineOnly(string input);
 
-int main (void) {
+int main (int argc, char **argv)
+{
 	int create_socket, new_socket;
 	socklen_t addrlen;
 	char buffer[BUF];
 	int size;
 	struct sockaddr_in address, cliaddress;
 
+    // Regex for the username input
 	string user_regex = "^[a-zA-Z0-9]{1,8}$";
-	string strbuf;
+	// Temporary variable used every now and then
+	string temp;
 
 	create_socket = socket (AF_INET, SOCK_STREAM, 0);
+
+    // If not enough arguments are delivered, the program exits
+	if(argc < 3)
+	{
+		cout << "Missing Arguments: " << argv[0] << " Port Number + Mailspookdirectory" << endl;
+		cout << "Maybe try 'data/' for a directory :)" << endl;
+		exit(EXIT_FAILURE);
+	}
+
+    // Path to mailspooldirectory
+	string m_path = argv[2]; //"data/";
+	string combo_path = "./" + m_path;
+	DIR* dir = opendir(combo_path.c_str());
+
+    // Check if msdirectory exists; if yes, good, if not, create it
+	if (dir)
+	{
+	    /* Directory exists. */
+	    closedir(dir);
+	}
+	else if (ENOENT == errno)
+	{
+	    /* Directory does not exist. */
+		mkdir(combo_path.c_str(), 0777);
+	}
 
 	memset(&address,0,sizeof(address));
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = INADDR_ANY;
-	address.sin_port = htons (PORT);
+	address.sin_port = htons (atoi(argv[1]));
+
+	// Arbitrary variable needed for setsockopt
 	int x = 1;
+	// To prevent the port from locking up, we tell the program to use it again
 	setsockopt(create_socket, SOL_SOCKET, SO_REUSEADDR, &x, sizeof(int*));
 
 	if (bind ( create_socket, (struct sockaddr *) &address, sizeof (address)) != 0)
@@ -55,24 +89,23 @@ int main (void) {
 
 		if (new_socket > 0)
 		{
-			strbuf = "\nWelcome to myserver, please enter your command:\n";
+            // Send a warm welcome to the client
+			temp = "Welcome to myserver, please enter your command:\n";
 			cout << "Client connected from " << inet_ntoa(cliaddress.sin_addr) << ":" << ntohs(cliaddress.sin_port)<< "..." << endl;
-			strncpy(buffer, strbuf.c_str(), sizeof(buffer));
-			send(new_socket, strbuf.c_str(), strlen(buffer),0);
+			strncpy(buffer, temp.c_str(), sizeof(buffer));
+			send(new_socket, temp.c_str(), strlen(buffer),0);
 		}
 
 		do
 		{
-
+            // Reset buffer
             memset(buffer, 0, sizeof(buffer));
-			//cout << "Waiting on Input" << endl;
 			size = recv(new_socket, buffer, BUF-1, 0);
-			//cout << "Got some Input" << endl;
 
 			if( size > 0)
 			{
 				buffer[size] = '\0';
-				string temp = StringToLower(buffer);
+				temp = StringToLower(buffer);
 				cout << "Message received: " << temp << endl;
 
 				int input_type = temp == "send" ? 1 : temp == "list" ? 2 : temp == "read" ? 3 : temp == "del" ? 4 : temp == "quit" ? 5 : 6;
@@ -203,7 +236,7 @@ int main (void) {
 						cout << "Message:\n" << send_information[3];
 
 						/*     WRITE TO FILE     */
-						MessageIn.open("data/" + send_information[1] + ".txt");
+						MessageIn.open(m_path + send_information[1] + ".txt");
 
 						if(MessageIn.is_open())
 						{
@@ -228,7 +261,7 @@ int main (void) {
 
 						file_content += file_output;
 
-						MessageOut.open("data/" + send_information[1] + ".txt");
+						MessageOut.open(m_path + send_information[1] + ".txt");
 
 						if(MessageOut.is_open())
 						{
@@ -259,7 +292,7 @@ int main (void) {
                         buffer[size - 1] = '\0';
                         list_user = buffer;
 
-                        MessageIn.open("data/" + list_user + ".txt");
+                        MessageIn.open(m_path + list_user + ".txt");
 
                         if(MessageIn.is_open())
 						{
@@ -324,7 +357,7 @@ int main (void) {
                         buffer[size - 1] = '\0';
                         read_user = buffer;
 
-                        MessageIn.open("data/" + read_user + ".txt");
+                        MessageIn.open(m_path + read_user + ".txt");
 
                         if(MessageIn.is_open())
 						{
@@ -426,7 +459,7 @@ int main (void) {
                         buffer[size - 1] = '\0';
                         delete_user = buffer;
 
-                        MessageIn.open("data/" + delete_user + ".txt");
+                        MessageIn.open(m_path + delete_user + ".txt");
 
                         if(MessageIn.is_open())
 						{
@@ -457,7 +490,7 @@ int main (void) {
                                 strncpy(buffer, "OK", sizeof(buffer));
                                 send(new_socket, buffer, strlen(buffer),0);
 
-								temp = "data/" + delete_user + ".txt";
+								temp = m_path + delete_user + ".txt";
 								remove(temp.c_str());
 								cout << "OPERATION FINISHED\nWaiting for new Input...\n" << endl;
 							}
@@ -484,7 +517,7 @@ int main (void) {
 									file_substr = file_substr.substr(file_substr.find("#####"), file_substr.length());
                                 }
 
-								MessageOut.open("data/" + delete_user + ".txt");
+								MessageOut.open(m_path + delete_user + ".txt");
 
 								if(MessageOut.is_open())
 								{
@@ -520,7 +553,7 @@ int main (void) {
 						break;}
 					default:{
 						/*--------------------------*/
-						/*      SEND OPERATION      */
+						/*       NO OPERATION       */
 						/*--------------------------*/
 
 						strncpy(buffer,"0", sizeof(buffer));
