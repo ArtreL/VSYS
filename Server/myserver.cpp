@@ -375,6 +375,7 @@ int main (void) {
                                     {
                                         read_message = (i + 1) == read_postnumber ? file_substr.substr(0, file_substr.find("#***#")) : read_message;
                                     }
+
                                     file_substr = file_substr.substr(file_substr.find("#####") + 5, file_substr.length());
                                 }
 
@@ -425,15 +426,18 @@ int main (void) {
                         buffer[size - 1] = '\0';
                         delete_user = buffer;
 
-                        size = recv(new_socket, buffer, BUF-1, 0);
-                        buffer[size - 1] = '\0';
-                        temp = buffer;
-                        delete_postnumber = temp.length() > 0 ? stoi(temp) : 0;
-
                         MessageIn.open("data/" + delete_user + ".txt");
 
                         if(MessageIn.is_open())
 						{
+                            strncpy(buffer, "OK", sizeof(buffer));
+							send(new_socket, buffer, strlen(buffer),0);
+
+                            size = recv(new_socket, buffer, BUF-1, 0);
+                            buffer[size - 1] = '\0';
+                            temp = buffer;
+                            delete_postnumber = temp.length() > 0 ? stoi(temp) : 0;
+
 							file_content = "";
 
 							while(getline(MessageIn, temp))
@@ -450,21 +454,30 @@ int main (void) {
 
                             if((number_of_messages == 1) && (delete_postnumber == 1))
 							{
+                                strncpy(buffer, "OK", sizeof(buffer));
+                                send(new_socket, buffer, strlen(buffer),0);
+
 								temp = "data/" + delete_user + ".txt";
 								remove(temp.c_str());
+								cout << "OPERATION FINISHED\nWaiting for new Input...\n" << endl;
 							}
 							else if(delete_postnumber <= number_of_messages)
                             {
+                                strncpy(buffer, "OK", sizeof(buffer));
+                                send(new_socket, buffer, strlen(buffer),0);
+
                                 file_substr = file_content.substr(file_content.find("#####"), file_content.length());
 
-                                for(int i = 0; i < number_of_messages; ++i)
+                                for(int i = 0; i < number_of_messages; ++i) // 5
                                 {
-									if((i + 1) != delete_postnumber)
+                                    temp = (i + 2) == number_of_messages ? "#***#" : "##*##";
+
+									if((i + 1) != delete_postnumber) // 4
 									{
-										delete_output += (i + 1) == number_of_messages ? "#***#" : "##*##";
+                                        // if i is the second to last of all messages, make it the new last
+										delete_output += (i + 2) >= number_of_messages ? "#***#" : "##*##";
 										delete_output += to_string(delete_index + 1);
 										++delete_index;
-										temp = (i + 2) == number_of_messages ? "#***#" : "##*##";
 										delete_output += file_substr.substr(0, file_substr.find(temp));
 									}
 									file_substr = file_substr.substr(file_substr.find(temp) + 5, file_substr.length());
@@ -478,28 +491,26 @@ int main (void) {
 									MessageOut << delete_output;
 									MessageOut.close();
 
-									strncpy(buffer, "OK", sizeof(buffer));
+									cout << "Message deleted" << endl;
 								}
 								else
 								{
-									strncpy(buffer, "ERR", sizeof(buffer));
+									cout << "Could not write file." << endl;
 								}
-
-								send(new_socket, buffer, strlen(buffer),0);
 
 								cout << "OPERATION FINISHED\nWaiting for new Input...\n" << endl;
                             }
                             else
                             {
                                 // SEND ERROR TO CLIENT
-                                strncpy(buffer, "ERR\n", sizeof(buffer));
+                                strncpy(buffer, "ERR", sizeof(buffer));
                                 send(new_socket, buffer, strlen(buffer),0);
                             }
                         }
                         else
                         {
                             // SEND ERROR TO CLIENT
-                            strncpy(buffer, "ERR\n", sizeof(buffer));
+                            strncpy(buffer, "ERR", sizeof(buffer));
 							send(new_socket, buffer, strlen(buffer),0);
                         }
 						break;}

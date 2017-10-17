@@ -62,12 +62,24 @@ int main (int argc, char **argv)
 	do
 	{
 		/* Menu */
-		cout << "Choose operation: " << endl;
-		cout << "SEND: Send a message" << endl;
-		cout << "LIST: List all messages from a user" << endl;
-		cout << "READ: Find a user's message by its number" << endl;
-		cout << "DEL : Delete one message" << endl;
-		cout << "QUIT: Logout\n" << endl;
+		cout << "\e(0\x6c\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B";
+		cout << "\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B";
+		cout << "\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B";
+		cout << "\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B";
+		cout << "\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B";
+		cout << "\e(0\x71\e(B\e(0\x71\e(B\e(0\x6b\e(B" << endl;
+		cout << "\e(0\x78\e(BChoose operation:                        \e(0\x78\e(B" << endl;
+		cout << "\e(0\x78\e(BSEND: Send a message                     \e(0\x78\e(B" << endl;
+		cout << "\e(0\x78\e(BLIST: List all messages from a user      \e(0\x78\e(B" << endl;
+		cout << "\e(0\x78\e(BREAD: Find a user's message by its number\e(0\x78\e(B" << endl;
+		cout << "\e(0\x78\e(BDEL : Delete one message                 \e(0\x78\e(B" << endl;
+		cout << "\e(0\x78\e(BQUIT: Logout                             \e(0\x78\e(B" << endl;
+		cout << "\e(0\x6d\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B";
+		cout << "\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B";
+		cout << "\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B";
+		cout << "\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B";
+		cout << "\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B";
+		cout << "\e(0\x71\e(B\e(0\x71\e(B\e(0\x6a\e(B" << endl;
 
 		memset(buffer, 0, sizeof(buffer));
 
@@ -86,6 +98,7 @@ int main (int argc, char **argv)
 			{
 				case 1:{
 					/* CASE SEND */
+                    cout << "\n------------------\n" << endl;
 					do
 					{
 						cout << "Please enter sender name: ";
@@ -139,17 +152,23 @@ int main (int argc, char **argv)
 					receiver[size] = '\0';
 					temp = receiver;
 
+                    cout << "\n------------------\n" << endl;
+
 					if(temp == "ERR")
 					{
-						cout << "ERR: Could not send\n" << endl; // ERROR MESSAGE
+						cout << "ERR: Could not send" << endl; // ERROR MESSAGE
 					}
 					else
 					{
-						cout << "OK: Message sent\n" << endl; // SUCCESS
+						cout << "OK: Message sent" << endl; // SUCCESS
 					}
+
+                    cout << "\n------------------\n" << endl;
+
 					break;}
 				case 2:{
 					/* CASE LIST */
+                    cout << "\n------------------\n" << endl;
                     cout << "Please enter user name: ";
                     fgets(buffer, BUF, stdin);
                     send(create_socket, buffer, strlen(buffer), 0);
@@ -162,11 +181,11 @@ int main (int argc, char **argv)
                     {
                         send(create_socket, buffer, strlen(buffer), 0);
                         number_of_messages = temp.length() > 0 ? stoi(temp) : 0;
+                        cout << "\n------------------\n" << endl;
 
                         for(int i = 0; i < number_of_messages; ++i)
                         {
                             cout << "#" << i + 1;
-
                             size = recv(create_socket, receiver, BUF-1, 0);
                             receiver[size] = '\0';
                             send(create_socket, buffer, strlen(buffer), 0);
@@ -181,6 +200,8 @@ int main (int argc, char **argv)
 
                             cout << ", Object: " << temp << endl;
                         }
+
+                        cout << "\n------------------\n" << endl;
                     }
                     else
                     {
@@ -190,6 +211,7 @@ int main (int argc, char **argv)
                     break;}
 				case 3:{
 					/* CASE READ */
+                    cout << "\n------------------\n" << endl;
                     cout << "Please enter a user name: ";
                     fgets(buffer, BUF, stdin);
                     send(create_socket, buffer, strlen(buffer), 0);
@@ -209,10 +231,12 @@ int main (int argc, char **argv)
                         buffer[size] = '\0';
                         temp = buffer;
 
-                        send(create_socket, buffer, strlen(buffer), 0);
-
                         if(temp != "ERR")
                         {
+
+                            temp = "";
+
+                            send(create_socket, buffer, strlen(buffer), 0);
                             do
                             {
                                 size = recv(create_socket, buffer, BUF-1, 0);
@@ -242,15 +266,39 @@ int main (int argc, char **argv)
                     break;}
 				case 4:{
 					/* CASE DEL */
+                    cout << "\n------------------\n" << endl;
 					cout << "Please enter a user name: ";
                     fgets(buffer, BUF, stdin);
                     send(create_socket, buffer, strlen(buffer), 0);
 
-                    cout << "Please enter a post number: ";
-                    fgets(buffer, BUF, stdin);
-                    send(create_socket, buffer, strlen(buffer), 0);
-					temp = "";
 
+                    size = recv(create_socket, buffer, BUF-1, 0);
+                    buffer[size] = '\0';
+                    temp = buffer;
+
+                    if(temp != "ERR")
+                    {
+                        cout << "Please enter a post number: ";
+                        fgets(buffer, BUF, stdin);
+                        send(create_socket, buffer, strlen(buffer), 0);
+						temp = "";
+                        size = recv(create_socket, buffer, BUF-1, 0);
+                        buffer[size] = '\0';
+                        temp = buffer;
+
+                        if(temp != "ERR")
+                        {
+                            cout << "\nMessage deleted\n" << endl;
+                        }
+                        else
+                        {
+                            cout << "ERR: No messages under this number.\n" << endl;
+                        }
+                    }
+                    else
+                    {
+                        cout << "ERR: No messages for this user found.\n" << endl;
+                    }
 
 					break;}
 				default:
