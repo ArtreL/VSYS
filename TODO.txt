@@ -1,2 +1,0 @@
-Edit moodle client template to c++.	[ ]
-Edit moodle server template to c++.	[ ]

@@ -17,6 +17,7 @@ using namespace std;
 
 string StringToLower(char value[]);
 string CutFromString(string input, string pattern);
+int StringNewlineOnly(string input);
 
 int main (void) {
 	int create_socket, new_socket;
@@ -165,6 +166,7 @@ int main (void) {
 							temp = CutFromString(temp, "#####");
 							temp = CutFromString(temp, "##*##");
 							temp = CutFromString(temp, "#***#");
+							temp = temp.length() == 0 ? "object" : temp;
 
 							send_information[2] = temp;
 							if(size > 81)
@@ -195,6 +197,7 @@ int main (void) {
 						temp = CutFromString(temp, "#####");
 						temp = CutFromString(temp, "##*##");
 						temp = CutFromString(temp, "#***#");
+						temp = StringNewlineOnly(temp) == 1 ? "Empty Message\n" : temp;
 
 						send_information[3] = temp;
 						cout << "Message:\n" << send_information[3];
@@ -574,5 +577,20 @@ string CutFromString(string input, string pattern)
     }
 
 	return output;
+}
+
+int StringNewlineOnly(string input)
+{
+    int nl_only = 1;
+
+    if(input.length() > 0)
+    {
+        for(size_t i = 0; i < (input.length() - 1); ++i)
+        {
+            nl_only = input[i] != '\n' ? 0 : nl_only;
+        }
+    }
+
+    return nl_only;
 }
 

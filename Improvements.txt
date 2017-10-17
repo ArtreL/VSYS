@@ -1,0 +1,8 @@
+Possible Improvements
+
+- Whenever multiple Inputs, that are clearly not 1024 characters long, are sent, 
+  gather them and send them with a unique delimiter all at once.
+- On the client side, when an operation is chosen, don't wait for the respective
+  case from a send/receive, but simply step into the specified case.
+- Instead of swapping the buffer char array and the temp string constantly,
+  check if maybe a string.c_str() is accepted by the send function as well.
