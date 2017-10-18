@@ -16,8 +16,8 @@ Another test!
 
 To quickly explain our structure:
 Each message consists of a subsequent number, the sender's name and the object. 
-Since each user gets their own file, we don't need to save this information.
-The message is displayed after each object. Since messages can have multiple lines, we didn't want to fit them into one line.
+Since each user gets their own file, we don't need to save the receiver's name.
+The message is displayed after each object. Since messages can have multiple lines, we didn't want to display them in one line.
 Also: readability!
 
 Before each number you'll find a delimiter, namely "##*##" or "#***#". The rest (sender, object and message) is split with "#####".
@@ -26,7 +26,7 @@ and "#***#" tells us that the following message will be the last one. This is us
 
 Note that if you delete the last remaining message from a specific user, their entire file gets deleted rather than leaving an empty file floating around.
 
-You'll notice that both client and server print out a lot more information than needed. While the exercise didn't include those prints,
+You'll notice that both client and server print out a lot more information than needed. While the exercise didn't include those printouts,
 we felt like it's much easier to understand what's happening with this additional information, both for debugging and for actual usage.
 
 You can make the files with the attached MAKE-file. When you want to start the programs, the syntax is as requested in the excercise:
@@ -40,7 +40,7 @@ Client: ./myclient <IP> <PORT>
 ./myclient 127.0.0.1 6543
 
 This should also work with the client and the server being executed on two different computers, using the external IP address of the computer that is running the server.
-Note that personal firewall/security settings might prevent this from working (we tested it on several computers and it didn't work everywhere).
+Note that personal firewall/security settings might prevent this from working (we tested it on several computers and it did work on some of them, but not on all).
 
 Thanks for rating our program and for giving feedback, we appreciate it!
 
