@@ -5,7 +5,6 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <stdlib.h>
-//#include <stdio.h>
 #include <string.h>
 #include <iostream>
 #define BUF 1024
@@ -13,6 +12,7 @@
 
 using namespace std;
 
+// Function to print pretty figures
 void PrintHorrorzontal();
 
 int main (int argc, char **argv)
@@ -25,7 +25,7 @@ int main (int argc, char **argv)
 	string temp;
 	int number_of_messages;
 
-	/* on missing arguments display usage error message */
+	// On missing arguments display usage error message
 	if(argc < 3){
 		cout << "Usage: " << argv[0] << " ServerAdresse + Port Number" << endl;
 		exit(EXIT_FAILURE);
@@ -43,7 +43,7 @@ int main (int argc, char **argv)
 	address.sin_port = htons (user_port);
 	inet_aton (argv[1], &address.sin_addr);
 
-	/* Error / Confirmation message on (un-)successful connection */
+	// Error / Confirmation message on (un-)successful connection
 	if(connect (create_socket, (struct sockaddr *) &address, sizeof(address)) == 0)
 	{
 		cout << "Connection with server " << inet_ntoa(address.sin_addr) << " established" << endl;
@@ -63,7 +63,7 @@ int main (int argc, char **argv)
 
 	do
 	{
-		/* Menu */
+		// Print Menu
 		cout << "\e(0\x6c\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B";
 		cout << "\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B";
 		cout << "\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B";
@@ -85,21 +85,28 @@ int main (int argc, char **argv)
 
 		memset(buffer, 0, sizeof(buffer));
 
-		/* take input and send it to server */
+		// Send operation to server
 		fgets(buffer, BUF, stdin);
 		send(create_socket, buffer, strlen(buffer), 0);
 
+		// Receive confirmation from server
 		size = recv(create_socket, receiver, BUF-1, 0);
 
+		// Czech if received message contains anything
 		if( size > 0)
 		{
+            // Convert the received character array to integer
 			receiver[size] = '\0';
 			menu = atoi(receiver);
 
+			// Perform 
 			switch(menu)
 			{
 				case 1:{
-					/* CASE SEND */
+                    /*--------------------------*/
+                    /*      SEND OPERATION      */
+                    /*--------------------------*/
+
 					PrintHorrorzontal();
 					do
 					{
@@ -167,7 +174,9 @@ int main (int argc, char **argv)
 
 					break;}
 				case 2:{
-					/* CASE LIST */
+                    /*--------------------------*/
+                    /*      LIST OPERATION      */
+                    /*--------------------------*/
 			PrintHorrorzontal();
                     cout << "Please enter user name: ";
                     fgets(buffer, BUF, stdin);
@@ -208,7 +217,9 @@ int main (int argc, char **argv)
 
                     break;}
 				case 3:{
-					/* CASE READ */
+                    /*--------------------------*/
+                    /*      READ OPERATION      */
+                    /*--------------------------*/
 			PrintHorrorzontal();
                     cout << "Please enter a user name: ";
                     fgets(buffer, BUF, stdin);
@@ -262,8 +273,11 @@ int main (int argc, char **argv)
 
                     break;}
 				case 4:{
-					/* CASE DEL */
-			PrintHorrorzontal();
+                    /*--------------------------*/
+                    /*       DEL OPERATION      */
+                    /*--------------------------*/
+
+                    PrintHorrorzontal();
 					cout << "Please enter a user name: ";
                     fgets(buffer, BUF, stdin);
                     send(create_socket, buffer, strlen(buffer), 0);
@@ -298,9 +312,13 @@ int main (int argc, char **argv)
                     }
 
 					break;}
-				default:
-					cout << "default case" << endl;
-					break;
+				default:{
+                    /*-------------------------*/
+                    /*       NO OPERATION      */
+                    /*-------------------------*/
+
+					cout << "Invalid Operation" << endl;
+					break;}
 			}
 		}
 	}while (strcmp (buffer, "quit\n") != 0);

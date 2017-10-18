@@ -108,8 +108,10 @@ int main (int argc, char **argv)
 				temp = StringToLower(buffer);
 				cout << "Message received: " << temp << endl;
 
+				// Determine switch case
 				int input_type = temp == "send" ? 1 : temp == "list" ? 2 : temp == "read" ? 3 : temp == "del" ? 4 : temp == "quit" ? 5 : 6;
 
+				// Variables for SEND case
 				string send_information[4];
 				bool check = false;
 				ifstream MessageIn;
@@ -119,12 +121,14 @@ int main (int argc, char **argv)
 				string file_output = "";
 				int message_number = 0;
 
+				// Variables for LIST case
 				string list_user = "";
 				int number_of_messages = 0;
 				string list_sender = "";
 				string list_object = "";
 				char dump_array[1] = {'a'};
 
+				// Variables for READ case
 				string read_user = "";
 				int read_postnumber = 0;
 				string read_sender = "";
@@ -133,6 +137,7 @@ int main (int argc, char **argv)
 				string read_result = "";
 				int read_subend = 0;
 
+				// Variables for DEL case
 				string delete_user = "";
 				int delete_postnumber = 0;
 				string delete_output = "";
@@ -145,10 +150,12 @@ int main (int argc, char **argv)
 						/*      SEND OPERATION      */
 						/*--------------------------*/
 
+						// Confirm SEND case to client
 						strncpy(buffer,"1", sizeof(buffer));
 						send(new_socket, buffer, strlen(buffer),0);
 
-						/*     GET SENDER NAME     */
+						// Get sender name
+						// Repeat until input is valid (regex)
 						do
 						{
 							size = recv(new_socket, buffer, BUF-1, 0);
@@ -166,10 +173,13 @@ int main (int argc, char **argv)
 								strncpy(buffer, "OK", sizeof(buffer));
 								cout << "Sender: " << send_information[0] << endl;
 							}
+
+							// Send check result to client
 							send(new_socket, buffer, strlen(buffer),0);
 						} while(check && (size != 0));
 
-						/*   GET RECEIVER NAME   */
+						// Get receiver name
+						// Repeat until input is valid (regex)
 						do
 						{
 							size = recv(new_socket, buffer, BUF-1, 0);
@@ -187,18 +197,25 @@ int main (int argc, char **argv)
 								strncpy(buffer, "OK", sizeof(buffer));
 								cout << "Receiver: " << send_information[1] << endl;
 							}
+
+							// Send check result to client
 							send(new_socket, buffer, strlen(buffer),0);
 						} while(check && (size != 0));
 
-						/*     GET OBJECT     */
+						// Get object
+						// Repeat until input is valid (char limit)
 						do
 						{
 							size = recv(new_socket, buffer, BUF-1, 0);
 							buffer[size - 1] = '\0';
 							temp = buffer;
+
+							// Remove file delimiters from input
 							temp = CutFromString(temp, "#####");
 							temp = CutFromString(temp, "##*##");
 							temp = CutFromString(temp, "#***#");
+
+							// If input was empty, set it to default
 							temp = temp.length() == 0 ? "object" : temp;
 
 							send_information[2] = temp;
@@ -211,10 +228,13 @@ int main (int argc, char **argv)
 								strncpy(buffer, "OK", sizeof(buffer));
 								cout << "Object: " << send_information[2] << endl;
 							}
+
+							// Send check result to client
 							send(new_socket, buffer, strlen(buffer),0);
 						} while((size > 81) && (size != 0));
 
-						/*     GET MESSAGE     */
+						// Get message
+						// Repeat until the whole message was received
 						temp = "";
 						do
 						{
@@ -227,40 +247,52 @@ int main (int argc, char **argv)
 							}
 						} while((buffer[0] != '.') && (buffer[1] != '\n'));
 
+						// Remove file delimiters from input
 						temp = CutFromString(temp, "#####");
 						temp = CutFromString(temp, "##*##");
 						temp = CutFromString(temp, "#***#");
+
+						// If input was (basically) empty, set it to default
 						temp = StringNewlineOnly(temp) == 1 ? "Empty Message\n" : temp;
 
 						send_information[3] = temp;
 						cout << "Message:\n" << send_information[3];
 
-						/*     WRITE TO FILE     */
+						// Write to file
 						MessageIn.open(m_path + send_information[1] + ".txt");
 
 						if(MessageIn.is_open())
 						{
 							file_content = "";
 
+                            // Fetch all existing content from file
 							while(getline(MessageIn, temp))
 							{
 								file_content += temp + "\n";
 							}
 
 							MessageIn.close();
+
+							// Get number of last existing post
 							file_substr = "";
 							file_substr = file_content.substr(file_content.find("#***#") + 5, file_content.length());
 							file_substr = file_substr.substr(0, file_substr.find("#####"));
+
+							// Replace the "last post" delimiter with a standard one
 							file_content.replace(file_content.find("#***#"), 5, "##*##");
 						}
-						message_number = 0;
+
+						// If any number was found, set it and increase by one
 						message_number = file_substr.length() > 0 ? stoi(file_substr) : 0;
 						++message_number;
 
+						// Build string to write with inputs and delimiters
 						file_output = "#***#" + to_string(message_number) + "#####" + send_information[0] + "#####" + send_information[2] + "#####\n" + send_information[3];
 
+						// Append string to existing content
 						file_content += file_output;
 
+						// Open file and write
 						MessageOut.open(m_path + send_information[1] + ".txt");
 
 						if(MessageOut.is_open())
@@ -285,17 +317,21 @@ int main (int argc, char **argv)
 						/*      LIST OPERATION      */
 						/*--------------------------*/
 
+						// Confirm LIST case to client
 						strncpy(buffer,"2", sizeof(buffer));
 						send(new_socket, buffer, strlen(buffer),0);
 
+						// Confirm LIST case to client
                         size = recv(new_socket, buffer, BUF-1, 0);
                         buffer[size - 1] = '\0';
                         list_user = buffer;
 
+						// Open file for given user
                         MessageIn.open(m_path + list_user + ".txt");
 
                         if(MessageIn.is_open())
 						{
+							// Fetch content from file
 							file_content = "";
 
 							while(getline(MessageIn, temp))
@@ -305,33 +341,41 @@ int main (int argc, char **argv)
 
 							MessageIn.close();
 
+                            // Extract number of posts from content
 							file_substr = "";
                             file_substr = file_content.substr(file_content.find("#***#") + 5, file_content.length());
                             file_substr = file_substr.substr(0, file_substr.find("#####"));
                             number_of_messages = file_substr.length() > 0 ? stoi(file_substr) : 0;
+
+                            // Send number of posts to client
                             strncpy(buffer, file_substr.c_str(), sizeof(buffer));
-                            // SEND NUMBER TO CLIENT HERE
 							send(new_socket, buffer, strlen(buffer),0);
+
+                            // Receive confirmation from client
                             recv(new_socket, dump_array, BUF-1, 0);
 
                             file_substr = file_content.substr(file_content.find("#####") + 5, file_content.length());
 
+                            // Prepare content and send to client
 							for(int i = 0; i < number_of_messages; ++i)
 							{
+                            	// Prepare and send the sender information
                                 list_sender = file_substr.substr(0, file_substr.find("#####"));
                                 file_substr = file_substr.substr(file_substr.find("#####") + 5, file_substr.length());
-                                // SEND SENDER TO CLIENT HERE
+
                                 strncpy(buffer, list_sender.c_str(), sizeof(buffer));
                                 send(new_socket, buffer, strlen(buffer),0);
                                 recv(new_socket, dump_array, BUF-1, 0);
 
+                            	// Prepare and send the object information
                                 list_object = file_substr.substr(0, file_substr.find("#####"));
                                 file_substr = file_substr.substr(file_substr.find("#####") + 5, file_substr.length());
-                                // SEND OBJECT TO CLIENT HERE
+
                                 strncpy(buffer, list_object.c_str(), sizeof(buffer));
                                 send(new_socket, buffer, strlen(buffer),0);
                                 recv(new_socket, dump_array, BUF-1, 0);
 
+                            	// Cut off unused parts of the content
                                 file_substr = file_substr.substr(file_substr.find("#####") + 5, file_substr.length());
                             }
 
@@ -339,7 +383,7 @@ int main (int argc, char **argv)
 						}
 						else
 						{
-                            // SEND ERROR TO CLIENT
+                            // Could not open file; Send err to client
                             strncpy(buffer, "ERR", sizeof(buffer));
 							send(new_socket, buffer, strlen(buffer),0);
 						}
@@ -350,26 +394,32 @@ int main (int argc, char **argv)
 						/*      READ OPERATION      */
 						/*--------------------------*/
 
+						// Confirm READ case to client
 						strncpy(buffer,"3", sizeof(buffer));
 						send(new_socket, buffer, strlen(buffer),0);
 
+                        // Receive username from client
                         size = recv(new_socket, buffer, BUF-1, 0);
                         buffer[size - 1] = '\0';
                         read_user = buffer;
 
+                        // Open file for this user
                         MessageIn.open(m_path + read_user + ".txt");
 
                         if(MessageIn.is_open())
 						{
+                            // Send success message to client
                             temp = "OK";
                             strncpy(buffer,temp.c_str(), sizeof(buffer));
                             send(new_socket, buffer, strlen(buffer),0);
 
+                            // Receive post number from client
                             size = recv(new_socket, buffer, BUF-1, 0);
                             buffer[size - 1] = '\0';
                             temp = buffer;
                             read_postnumber = temp.length() > 0 ? stoi(temp) : 0;
 
+							// Fetch all content from file
 							file_content = "";
 
 							while(getline(MessageIn, temp))
@@ -379,27 +429,36 @@ int main (int argc, char **argv)
 
 							MessageIn.close();
 
+                            // Extract number of posts from content
 							file_substr = "";
+
                             file_substr = file_content.substr(file_content.find("#***#") + 5, file_content.length());
                             file_substr = file_substr.substr(0, file_substr.find("#####"));
                             number_of_messages = file_substr.length() > 0 ? stoi(file_substr) : 0;
 
+                            // Check if post number is present in current content
                             if(read_postnumber <= number_of_messages)
                             {
+                                // Send success message to client
                                 temp = "OK";
                                 strncpy(buffer,temp.c_str(), sizeof(buffer));
                                 send(new_socket, buffer, strlen(buffer),0);
 
+                                // Cut off the string up to the first relevant content
                                 file_substr = file_content.substr(file_content.find("#####") + 5, file_content.length());
 
+                                // Loop through the content and write the parts specified by the post number
                                 for(int i = 0; i < number_of_messages; ++i)
                                 {
+                                    // Check if current loop equals the given post number and write variable if it does
                                     read_sender = (i + 1) == read_postnumber ? file_substr.substr(0, file_substr.find("#####")) : read_sender;
                                     file_substr = file_substr.substr(file_substr.find("#####") + 5, file_substr.length());
 
+                                    // Check if current loop equals the given post number and write variable if it does
                                     read_object = (i + 1) == read_postnumber ? file_substr.substr(0, file_substr.find("#####")) : read_object;
                                     file_substr = file_substr.substr(file_substr.find("#####") + 5, file_substr.length());
 
+                                    // If the current loop represents the last message, set delimiter to the "last-post-delimiter"
                                     if((i + 2) != number_of_messages)
                                     {
                                         read_message = (i + 1) == read_postnumber ? file_substr.substr(0, file_substr.find("##*##")) : read_message;
@@ -409,40 +468,56 @@ int main (int argc, char **argv)
                                         read_message = (i + 1) == read_postnumber ? file_substr.substr(0, file_substr.find("#***#")) : read_message;
                                     }
 
+                                    // Cut off irrelevant content
                                     file_substr = file_substr.substr(file_substr.find("#####") + 5, file_substr.length());
                                 }
 
+                                // Build a master string containing all values
                                 read_result = "Sender: " + read_sender + "\nObject: " + read_object + "\nMessage:" + read_message;
                                 cout << read_result << endl;
 
+                                // Receive OK from client to start sending
                                 recv(new_socket, buffer, BUF-1, 0);
 
+                                // Send master string in 1024 Bit blocks until the master string is empty
                                 while(read_result.length() > 1)
                                 {
+                                    // Check if remaining string is longer than 1024 characters and use 1024 if it is
                                     read_subend = read_result.length() > BUF ? BUF : read_result.length();
+
+                                    // Write master string to temp string until char limit is reached
                                     temp = read_result.substr(0, read_subend);
+
+                                    // Cut off content that has already been prepared to be sent
                                     read_result = read_result.substr(read_subend, read_result.length());
 
+                                    // Send prepared string
                                     strncpy(buffer,temp.c_str(), sizeof(buffer));
                                     send(new_socket, buffer, strlen(buffer),0);
+
+                                    // Wait for OK from client
                                     size = recv(new_socket, buffer, BUF-1, 0);
                                 }
 
                                 cout << "OPERATION FINISHED\nWaiting for new Input...\n" << endl;
+
+                                // Send FINISH to client so they can stop receiving data
                                 strncpy(buffer, ".\n", sizeof(buffer));
                                 send(new_socket, buffer, strlen(buffer),0);
+
+                                // Wait for OK from client
                                 size = recv(new_socket, buffer, BUF-1, 0);
                             }
                             else
                             {
-                                // SEND ERROR TO CLIENT
+                                // Post number was not contained in current file
                                 strncpy(buffer, "ERR", sizeof(buffer));
                                 send(new_socket, buffer, strlen(buffer),0);
                             }
                         }
                         else
                         {
-                            // SEND ERROR TO CLIENT
+                            // Could not open file for user
                             strncpy(buffer, "ERR", sizeof(buffer));
 							send(new_socket, buffer, strlen(buffer),0);
                         }
@@ -452,25 +527,31 @@ int main (int argc, char **argv)
 						/*     DELETE OPERATION     */
 						/*--------------------------*/
 
+						// Confirm DEL case to client
 						strncpy(buffer,"4", sizeof(buffer));
 						send(new_socket, buffer, strlen(buffer),0);
 
+						// Receive username from client
                         size = recv(new_socket, buffer, BUF-1, 0);
                         buffer[size - 1] = '\0';
                         delete_user = buffer;
 
+                        // Open file for this user
                         MessageIn.open(m_path + delete_user + ".txt");
 
                         if(MessageIn.is_open())
 						{
+                            // Send success message to client
                             strncpy(buffer, "OK", sizeof(buffer));
 							send(new_socket, buffer, strlen(buffer),0);
 
+							// Receive post number from client
                             size = recv(new_socket, buffer, BUF-1, 0);
                             buffer[size - 1] = '\0';
                             temp = buffer;
                             delete_postnumber = temp.length() > 0 ? stoi(temp) : 0;
 
+							// Fetch all content from file
 							file_content = "";
 
 							while(getline(MessageIn, temp))
@@ -480,43 +561,69 @@ int main (int argc, char **argv)
 
 							MessageIn.close();
 
+                            // Extract number of posts from content
 							file_substr = "";
                             file_substr = file_content.substr(file_content.find("#***#") + 5, file_content.length());
                             file_substr = file_substr.substr(0, file_substr.find("#####"));
                             number_of_messages = file_substr.length() > 0 ? stoi(file_substr) : 0;
 
+                            // Check if there is only one message in the file
+                            // and if its number was specified by the user
                             if((number_of_messages == 1) && (delete_postnumber == 1))
 							{
+                                // Send success message to client
                                 strncpy(buffer, "OK", sizeof(buffer));
                                 send(new_socket, buffer, strlen(buffer),0);
 
+                                // Since there is only one message in the file
+                                // and it's supposed to be deleted,
+                                // simply delete the file
 								temp = m_path + delete_user + ".txt";
 								remove(temp.c_str());
 								cout << "OPERATION FINISHED\nWaiting for new Input...\n" << endl;
 							}
+							// Check if post number is present in current content
 							else if(delete_postnumber <= number_of_messages)
                             {
+                                // Send success message to client
                                 strncpy(buffer, "OK", sizeof(buffer));
                                 send(new_socket, buffer, strlen(buffer),0);
 
+                                // Cut off the string up to the first relevant content
                                 file_substr = file_content.substr(file_content.find("#####"), file_content.length());
 
-                                for(int i = 0; i < number_of_messages; ++i) // 5
+                                // Loop through the content and write the parts not specified by the post number
+                                for(int i = 0; i < number_of_messages; ++i)
                                 {
+                                    // If the current loop represents the second to last message,
+                                    // set find delimiter to the "last-post-delimiter"
                                     temp = (i + 2) == number_of_messages ? "#***#" : "##*##";
 
-									if((i + 1) != delete_postnumber) // 4
+                                    // If the current loop represents the post specified by
+                                    // the given post number, don't append it to the string
+									if((i + 1) != delete_postnumber)
 									{
-                                        // if i is the second to last of all messages, make it the new last
+                                        // If i is the second to last of all messages, start it with
+                                        // the "last-post-delimiter"
 										delete_output += (i + 2) >= number_of_messages ? "#***#" : "##*##";
+
+										// Append current delete index to create a
+										// subsequent enumeration for the posts
 										delete_output += to_string(delete_index + 1);
+
+										// Increase delete index
 										++delete_index;
+
+										// Append the post from start of sender to end of message
 										delete_output += file_substr.substr(0, file_substr.find(temp));
 									}
+
+									// Cut off irrelevant content
 									file_substr = file_substr.substr(file_substr.find(temp) + 5, file_substr.length());
 									file_substr = file_substr.substr(file_substr.find("#####"), file_substr.length());
                                 }
 
+                                // Open file and write
 								MessageOut.open(m_path + delete_user + ".txt");
 
 								if(MessageOut.is_open())
@@ -535,19 +642,24 @@ int main (int argc, char **argv)
                             }
                             else
                             {
-                                // SEND ERROR TO CLIENT
+                                // Post number was not contained in current file
                                 strncpy(buffer, "ERR", sizeof(buffer));
                                 send(new_socket, buffer, strlen(buffer),0);
                             }
                         }
                         else
                         {
-                            // SEND ERROR TO CLIENT
+                            // Could not open file for this user
                             strncpy(buffer, "ERR", sizeof(buffer));
 							send(new_socket, buffer, strlen(buffer),0);
                         }
 						break;}
 					case 5:{
+						/*--------------------------*/
+						/*      QUIT OPERATION      */
+						/*--------------------------*/
+
+						// No return value for the client, since there is no one anymore
 						cout << "Client disconnected from the server.\n" << endl;
 
 						break;}
@@ -556,6 +668,7 @@ int main (int argc, char **argv)
 						/*       NO OPERATION       */
 						/*--------------------------*/
 
+						// Confirm NO case to client
 						strncpy(buffer,"0", sizeof(buffer));
 						send(new_socket, buffer, strlen(buffer),0);
 
@@ -573,7 +686,6 @@ int main (int argc, char **argv)
 				perror("recv error");
 				return EXIT_FAILURE;
 			}
-			//cout << "At the end of the while loop" << endl;
 		} while (strncmp (buffer, "quit", 4) != 0);
 
 		close (new_socket);
@@ -583,6 +695,7 @@ int main (int argc, char **argv)
 	return EXIT_SUCCESS;
 }
 
+// Function to set every character in a char array to lower case
 string StringToLower(char value[])
 {
 	string output = "";
@@ -601,6 +714,7 @@ string StringToLower(char value[])
 	return output;
 }
 
+// Function to cut a specific pattern from an input string
 string CutFromString(string input, string pattern)
 {
     string output = "";
@@ -623,6 +737,7 @@ string CutFromString(string input, string pattern)
 	return output;
 }
 
+// Function to check if a string consists of new line characters only
 int StringNewlineOnly(string input)
 {
     int nl_only = 1;
