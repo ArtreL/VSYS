@@ -99,7 +99,7 @@ int main (int argc, char **argv)
 			receiver[size] = '\0';
 			menu = atoi(receiver);
 
-			// Perform 
+			// Perform respective case
 			switch(menu)
 			{
 				case 1:{
@@ -108,11 +108,18 @@ int main (int argc, char **argv)
                     /*--------------------------*/
 
 					PrintHorrorzontal();
+
+					// Send sendername to server
+					// Repeat until server check returns OK
 					do
 					{
 						cout << "Please enter sender name: ";
+
+						// Send sendername
 						fgets(buffer, BUF, stdin);
 						send(create_socket, buffer, strlen(buffer), 0);
+
+						// Receive check result from server
 						size = recv(create_socket, receiver, BUF-1, 0);
 						receiver[size] = '\0';
 						temp = receiver;
@@ -122,11 +129,18 @@ int main (int argc, char **argv)
 							cout << "ERR: Max 8 Characters and no Special Characters" << endl; // ERROR MESSAGE
 						}
 					} while(temp == "ERR");
+
+					// Send receivername to server
+					// Repeat until server check returns OK
 					do
 					{
 						cout << "Please enter receiver name: ";
+
+						// Send receivername
 						fgets(buffer, BUF, stdin);
 						send(create_socket, buffer, strlen(buffer), 0);
+
+						// Receive check result from server
 						size = recv(create_socket, receiver, BUF-1, 0);
 						receiver[size] = '\0';
 						temp = receiver;
@@ -136,11 +150,18 @@ int main (int argc, char **argv)
 							cout << "ERR: Max 8 Characters and no Special Characters" << endl; // ERROR MESSAGE
 						}
 					} while(temp == "ERR");
+
+					// Send object to server
+					// Repeat until server check returns OK
 					do
 					{
 						cout << "Please enter object: ";
+
+						// Send object
 						fgets(buffer, BUF, stdin);
 						send(create_socket, buffer, strlen(buffer), 0);
+
+						// Receive check result from server
 						size = recv(create_socket, receiver, BUF-1, 0);
 						receiver[size] = '\0';
 						temp = receiver;
@@ -150,13 +171,17 @@ int main (int argc, char **argv)
 							cout << "ERR: Max 80 Characters" << endl; // ERROR MESSAGE
 						}
 					} while(temp == "ERR");
-					cout << "Please enter your message:" << endl;;
+
+					cout << "Please enter your message:" << endl;
+
+					// Send message in multiple lines
 					do
 					{
 						fgets(buffer, BUF, stdin);
 						send(create_socket, buffer, strlen(buffer), 0);
 					} while((buffer[0] != '.') && (buffer[1] != '\n'));
 
+					// Receive check result from server
 					size = recv(create_socket, receiver, BUF-1, 0);
 					receiver[size] = '\0';
 					temp = receiver;
@@ -177,36 +202,54 @@ int main (int argc, char **argv)
                     /*--------------------------*/
                     /*      LIST OPERATION      */
                     /*--------------------------*/
-			PrintHorrorzontal();
+
+                    PrintHorrorzontal();
                     cout << "Please enter user name: ";
+
+                    // Send username to server
                     fgets(buffer, BUF, stdin);
                     send(create_socket, buffer, strlen(buffer), 0);
 
+                    // Receive check result from server
                     size = recv(create_socket, receiver, BUF-1, 0);
                     receiver[size] = '\0';
                     temp = receiver;
 
                     if(temp != "ERR")
                     {
+                        // Signal server to continue sending
                         send(create_socket, buffer, strlen(buffer), 0);
-                        number_of_messages = temp.length() > 0 ? stoi(temp) : 0;
-			PrintHorrorzontal();
 
+                        // Extract number of messages from received string
+                        number_of_messages = temp.length() > 0 ? stoi(temp) : 0;
+                        PrintHorrorzontal();
+
+                        // Loop and receive sender and object from the server
                         for(int i = 0; i < number_of_messages; ++i)
                         {
+                            // Print messagenumber
                             cout << "#" << i + 1;
+
+                            // Receive sender from server
                             size = recv(create_socket, receiver, BUF-1, 0);
                             receiver[size] = '\0';
+
+                            // Signal server to continue sending
                             send(create_socket, buffer, strlen(buffer), 0);
                             temp = receiver;
 
+                            // Print sender
                             cout << ": Sender: " << temp;
 
+                            // Receive object from server
                             size = recv(create_socket, receiver, BUF-1, 0);
                             receiver[size] = '\0';
+
+                            // Signal server to continue sending
                             send(create_socket, buffer, strlen(buffer), 0);
                             temp = receiver;
 
+                            // Print object
                             cout << ", Object: " << temp << endl;
                         }
                     }
@@ -220,11 +263,15 @@ int main (int argc, char **argv)
                     /*--------------------------*/
                     /*      READ OPERATION      */
                     /*--------------------------*/
-			PrintHorrorzontal();
+
+                    PrintHorrorzontal();
                     cout << "Please enter a user name: ";
+
+                    // Send username to server
                     fgets(buffer, BUF, stdin);
                     send(create_socket, buffer, strlen(buffer), 0);
 
+                    // Receive check result from server
                     size = recv(create_socket, buffer, BUF-1, 0);
                     buffer[size] = '\0';
                     temp = buffer;
@@ -232,33 +279,47 @@ int main (int argc, char **argv)
                     if(temp != "ERR")
                     {
                         cout << "Please enter a post number: ";
+
+                        // Send post number to server
                         fgets(buffer, BUF, stdin);
                         send(create_socket, buffer, strlen(buffer), 0);
                         temp = "";
 
+                        // Receive check result from server
                         size = recv(create_socket, buffer, BUF-1, 0);
                         buffer[size] = '\0';
                         temp = buffer;
 
                         if(temp != "ERR")
                         {
-
                             temp = "";
 
+                            // Send OK to server to signal it to start sending
                             send(create_socket, buffer, strlen(buffer), 0);
+
+                            // Receive an output string from the server
+                            // coming in 1024 Bit chunks
+                            // Repeat until ".\n" was received
                             do
                             {
+                                // Receive one chunk of the message
                                 size = recv(create_socket, buffer, BUF-1, 0);
                                 buffer[size] = '\0';
-                                send(create_socket, buffer, strlen(buffer), 0);
 
                                 if((buffer[0] != '.') && (buffer[1] != '\n'))
                                 {
+                                    // Append received chunks to a temporary string
+                                    // if they are legit pieces of information
                                     temp += buffer;
                                 }
+
+                                // Signal the server to send the next chunk
+                                send(create_socket, buffer, strlen(buffer), 0);
                             } while((buffer[0] != '.') && (buffer[1] != '\n') && (temp != "ERR"));
 
-				PrintHorrorzontal();
+                            PrintHorrorzontal();
+
+                            // Print out the complete string containing all information
                             cout << temp << endl;
                         }
                         else
@@ -279,10 +340,12 @@ int main (int argc, char **argv)
 
                     PrintHorrorzontal();
 					cout << "Please enter a user name: ";
+
+					// Send username to Server
                     fgets(buffer, BUF, stdin);
                     send(create_socket, buffer, strlen(buffer), 0);
 
-
+                    // Receive check result from server
                     size = recv(create_socket, buffer, BUF-1, 0);
                     buffer[size] = '\0';
                     temp = buffer;
@@ -290,9 +353,14 @@ int main (int argc, char **argv)
                     if(temp != "ERR")
                     {
                         cout << "Please enter a post number: ";
+
+                        // Send post number to server
                         fgets(buffer, BUF, stdin);
                         send(create_socket, buffer, strlen(buffer), 0);
+
 						temp = "";
+
+						// Receive check result from server
                         size = recv(create_socket, buffer, BUF-1, 0);
                         buffer[size] = '\0';
                         temp = buffer;
