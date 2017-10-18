@@ -3,6 +3,9 @@ Hello fellow student!
 You have been chosen to review our program, and we want to make it as easy as possible for you to do so.
 That's why we have commented a lot of our code. We also named our variables in a way that should make their job obvious.
 
+## IF YOU ARE READING THIS ON LINUX IN THE STANDARD EDITOR, IT PROBABLY LOOKS LIKE SHIT ##
+## WE SUGGEST TO USE NOTEPAD++ OR CODEBLOCKS TO LOOK AT THE CODE, FOR YOUR SANITY'S SAKE ##
+
 To quickly explain the peculiarities of our program:
 Every receiver has one .txt-file with all their received messages. When you take a look at one of those files, it might look like this:
 
