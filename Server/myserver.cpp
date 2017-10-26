@@ -30,6 +30,8 @@ int main (int argc, char **argv)
 	int size;
 	struct sockaddr_in address, cliaddress;
 
+    // Regex for the serverstart input
+	string dir_regex = "^[a-zA-Z0-9_+.,]{1,200}/$";
     // Regex for the username input
 	string user_regex = "^[a-zA-Z0-9]{1,8}$";
 	// Temporary variable used every now and then
@@ -49,6 +51,14 @@ int main (int argc, char **argv)
 	string m_path = argv[2]; //"data/";
 	string combo_path = "./" + m_path;
 	DIR* dir = opendir(combo_path.c_str());
+	int serv_port = atoi(argv[1]);
+
+	if(!((1024 < serv_port) && (serv_port < 65536)) || (!regex_match(m_path, regex(dir_regex))))
+	{
+		cout << "ERROR: Port number not within 1024-65535 range or directory schreibweis foisch" << endl;
+		cout << "Maybe try 'my_directory/' for a directory :)" << endl;
+		exit(EXIT_FAILURE);
+	}
 
     // Check if msdirectory exists; if yes, good, if not, create it
 	if (dir)
@@ -65,7 +75,7 @@ int main (int argc, char **argv)
 	memset(&address,0,sizeof(address));
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = INADDR_ANY;
-	address.sin_port = htons (atoi(argv[1]));
+	address.sin_port = htons (serv_port);
 
 	// Arbitrary variable needed for setsockopt
 	int x = 1;
@@ -125,14 +135,14 @@ int main (int argc, char **argv)
 				string list_user = "";
 				int number_of_messages = 0;
 				string list_sender = "";
-				string list_object = "";
+				string list_subject = "";
 				char dump_array[1] = {'a'};
 
 				// Variables for READ case
 				string read_user = "";
 				int read_postnumber = 0;
 				string read_sender = "";
-				string read_object = "";
+				string read_subject = "";
 				string read_message = "";
 				string read_result = "";
 				int read_subend = 0;
@@ -202,7 +212,7 @@ int main (int argc, char **argv)
 							send(new_socket, buffer, strlen(buffer),0);
 						} while(check && (size != 0));
 
-						// Get object
+						// Get subject
 						// Repeat until input is valid (char limit)
 						do
 						{
@@ -216,7 +226,7 @@ int main (int argc, char **argv)
 							temp = CutFromString(temp, "#***#");
 
 							// If input was empty, set it to default
-							temp = temp.length() == 0 ? "object" : temp;
+							temp = temp.length() == 0 ? "subject" : temp;
 
 							send_information[2] = temp;
 							if(size > 81)
@@ -226,7 +236,7 @@ int main (int argc, char **argv)
 							else
 							{
 								strncpy(buffer, "OK", sizeof(buffer));
-								cout << "Object: " << send_information[2] << endl;
+								cout << "subject: " << send_information[2] << endl;
 							}
 
 							// Send check result to client
@@ -367,11 +377,11 @@ int main (int argc, char **argv)
                                 send(new_socket, buffer, strlen(buffer),0);
                                 recv(new_socket, dump_array, BUF-1, 0);
 
-                            	// Prepare and send the object information
-                                list_object = file_substr.substr(0, file_substr.find("#####"));
+                            	// Prepare and send the subject information
+                                list_subject = file_substr.substr(0, file_substr.find("#####"));
                                 file_substr = file_substr.substr(file_substr.find("#####") + 5, file_substr.length());
 
-                                strncpy(buffer, list_object.c_str(), sizeof(buffer));
+                                strncpy(buffer, list_subject.c_str(), sizeof(buffer));
                                 send(new_socket, buffer, strlen(buffer),0);
                                 recv(new_socket, dump_array, BUF-1, 0);
 
@@ -437,7 +447,7 @@ int main (int argc, char **argv)
                             number_of_messages = file_substr.length() > 0 ? stoi(file_substr) : 0;
 
                             // Check if post number is present in current content
-                            if(read_postnumber <= number_of_messages)
+                            if((0 < read_postnumber) && (read_postnumber <= number_of_messages))
                             {
                                 // Send success message to client
                                 temp = "OK";
@@ -455,7 +465,7 @@ int main (int argc, char **argv)
                                     file_substr = file_substr.substr(file_substr.find("#####") + 5, file_substr.length());
 
                                     // Check if current loop equals the given post number and write variable if it does
-                                    read_object = (i + 1) == read_postnumber ? file_substr.substr(0, file_substr.find("#####")) : read_object;
+                                    read_subject = (i + 1) == read_postnumber ? file_substr.substr(0, file_substr.find("#####")) : read_subject;
                                     file_substr = file_substr.substr(file_substr.find("#####") + 5, file_substr.length());
 
                                     // If the current loop represents the last message, set delimiter to the "last-post-delimiter"
@@ -473,7 +483,7 @@ int main (int argc, char **argv)
                                 }
 
                                 // Build a master string containing all values
-                                read_result = "Sender: " + read_sender + "\nObject: " + read_object + "\nMessage:" + read_message;
+                                read_result = "Sender: " + read_sender + "\nsubject: " + read_subject + "\nMessage:" + read_message;
                                 cout << read_result << endl;
 
                                 // Receive OK from client to start sending
@@ -583,7 +593,7 @@ int main (int argc, char **argv)
 								cout << "OPERATION FINISHED\nWaiting for new Input...\n" << endl;
 							}
 							// Check if post number is present in current content
-							else if(delete_postnumber <= number_of_messages)
+							else if((0 < delete_postnumber) && (delete_postnumber <= number_of_messages))
                             {
                                 // Send success message to client
                                 strncpy(buffer, "OK", sizeof(buffer));

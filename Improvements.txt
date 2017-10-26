@@ -1,5 +1,6 @@
 Possible Improvements
 
+- Check specified path for syntax!
 - Whenever multiple Inputs, that are clearly not 1024 characters long, are sent, 
   gather them and send them with a unique delimiter all at once.
 - On the client side, when an operation is chosen, don't wait for the respective
