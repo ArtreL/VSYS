@@ -8,7 +8,6 @@
 #include <string.h>
 #include <iostream>
 #define BUF 1024
-#define PORT 6543
 
 using namespace std;
 
@@ -378,6 +377,30 @@ int main (int argc, char **argv)
                     {
                         cout << "ERR: No messages for this user found.\n" << endl;
                     }
+
+					break;}
+				case 5:{
+                    /*-------------------------*/
+                    /*     LOGIN OPERATION     */
+                    /*-------------------------*/
+
+                    PrintHorrorzontal();
+					cout << "Please enter your user name: ";
+
+					// Send username to Server
+                    fgets(buffer, BUF, stdin);
+                    send(create_socket, buffer, strlen(buffer), 0);
+
+					cout << "Please enter your password: ";
+
+					// Send username to Server
+                    fgets(buffer, BUF, stdin);
+                    send(create_socket, buffer, strlen(buffer), 0);
+
+				    // Receive response from Server
+				    size = recv(create_socket, buffer, BUF-1, 0);
+				    buffer[size] = '\0';
+				    cout << buffer << endl;
 
 					break;}
 				default:{
