@@ -7,12 +7,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
+#include <termios.h>
 #define BUF 1024
 
 using namespace std;
 
 // Function to print pretty figures
 void PrintHorrorzontal();
+void HideStdinKeystrokes();
+void ShowStdinKeystrokes();
 
 int main (int argc, char **argv)
 {
@@ -108,27 +111,6 @@ int main (int argc, char **argv)
 
 					PrintHorrorzontal();
 
-					// Send sendername to server
-					// Repeat until server check returns OK
-					do
-					{
-						cout << "Please enter sender name: ";
-
-						// Send sendername
-						fgets(buffer, BUF, stdin);
-						send(create_socket, buffer, strlen(buffer), 0);
-
-						// Receive check result from server
-						size = recv(create_socket, receiver, BUF-1, 0);
-						receiver[size] = '\0';
-						temp = receiver;
-
-						if(temp == "ERR")
-						{
-							cout << "ERR: Max 8 Characters and no Special Characters" << endl; // ERROR MESSAGE
-						}
-					} while(temp == "ERR");
-
 					// Send receivername to server
 					// Repeat until server check returns OK
 					do
@@ -202,11 +184,7 @@ int main (int argc, char **argv)
                     /*      LIST OPERATION      */
                     /*--------------------------*/
 
-                    PrintHorrorzontal();
-                    cout << "Please enter user name: ";
-
-                    // Send username to server
-                    fgets(buffer, BUF, stdin);
+                    // Signal server to continue sending
                     send(create_socket, buffer, strlen(buffer), 0);
 
                     // Receive check result from server
@@ -263,11 +241,6 @@ int main (int argc, char **argv)
                     /*      READ OPERATION      */
                     /*--------------------------*/
 
-                    PrintHorrorzontal();
-                    cout << "Please enter a user name: ";
-
-                    // Send username to server
-                    fgets(buffer, BUF, stdin);
                     send(create_socket, buffer, strlen(buffer), 0);
 
                     // Receive check result from server
@@ -277,6 +250,7 @@ int main (int argc, char **argv)
 
                     if(temp != "ERR")
                     {
+                        PrintHorrorzontal();
                         cout << "Please enter a post number: ";
 
                         // Send post number to server
@@ -319,16 +293,22 @@ int main (int argc, char **argv)
                             PrintHorrorzontal();
 
                             // Print out the complete string containing all information
-                            cout << temp << endl;
+                            cout << temp;
+
+                        	PrintHorrorzontal();
+
+                        	cout << "OK: Message read" << endl;
                         }
                         else
                         {
-                            cout << "ERR: No message under this number found.\n" << endl;
+                        	PrintHorrorzontal();
+                            cout << "ERR: No message with this number found." << endl;
                         }
                     }
                     else
                     {
-                        cout << "ERR: No messages for this user found.\n" << endl;
+                        PrintHorrorzontal();
+                        cout << "ERR: No messages for this user found." << endl;
                     }
 
                     break;}
@@ -337,11 +317,6 @@ int main (int argc, char **argv)
                     /*       DEL OPERATION      */
                     /*--------------------------*/
 
-                    PrintHorrorzontal();
-					cout << "Please enter a user name: ";
-
-					// Send username to Server
-                    fgets(buffer, BUF, stdin);
                     send(create_socket, buffer, strlen(buffer), 0);
 
                     // Receive check result from server
@@ -351,6 +326,7 @@ int main (int argc, char **argv)
 
                     if(temp != "ERR")
                     {
+                        PrintHorrorzontal();
                         cout << "Please enter a post number: ";
 
                         // Send post number to server
@@ -366,16 +342,19 @@ int main (int argc, char **argv)
 
                         if(temp != "ERR")
                         {
-                            cout << "\nMessage deleted\n" << endl;
+                        	PrintHorrorzontal();
+                            cout << "OK: Message deleted" << endl;
                         }
                         else
                         {
-                            cout << "ERR: No messages under this number.\n" << endl;
+                        	PrintHorrorzontal();
+                            cout << "ERR: No message with this number found." << endl;
                         }
                     }
                     else
                     {
-                        cout << "ERR: No messages for this user found.\n" << endl;
+                        PrintHorrorzontal();
+                        cout << "ERR: No messages for this user found." << endl;
                     }
 
 					break;}
@@ -384,24 +363,52 @@ int main (int argc, char **argv)
                     /*     LOGIN OPERATION     */
                     /*-------------------------*/
 
-                    PrintHorrorzontal();
-					cout << "Please enter your user name: ";
-
-					// Send username to Server
-                    fgets(buffer, BUF, stdin);
-                    send(create_socket, buffer, strlen(buffer), 0);
-
-					cout << "Please enter your password: ";
-
-					// Send username to Server
-                    fgets(buffer, BUF, stdin);
-                    send(create_socket, buffer, strlen(buffer), 0);
+	                send(create_socket, buffer, strlen(buffer), 0);
 
 				    // Receive response from Server
 				    size = recv(create_socket, buffer, BUF-1, 0);
 				    buffer[size] = '\0';
-				    cout << buffer << endl;
+				    temp = buffer;
 
+				    if(temp == "OK")
+				    {
+	                    PrintHorrorzontal();
+						cout << "Please enter your user name: ";
+
+						// Send username to Server
+	                    fgets(buffer, BUF, stdin);
+	                    send(create_socket, buffer, strlen(buffer), 0);
+
+						cout << "Please enter your password: ";
+
+						HideStdinKeystrokes();
+
+						// Send password to Server
+	                    fgets(buffer, BUF, stdin);
+	                    send(create_socket, buffer, strlen(buffer), 0);
+
+	                    ShowStdinKeystrokes();
+
+						cout << endl;
+
+					    // Receive response from Server
+					    size = recv(create_socket, buffer, BUF-1, 0);
+					    buffer[size] = '\0';
+	                    PrintHorrorzontal();
+					    cout << buffer << endl;
+					}
+					else
+					{
+						cout << buffer << endl;
+					}
+
+					break;}
+				case 6:{
+                    /*-------------------------*/
+                    /* PLEASE LOGIN OPERATION  */
+                    /*-------------------------*/
+
+					cout << "Please 'Login' to use other Operations." << endl;
 					break;}
 				default:{
                     /*-------------------------*/
@@ -428,3 +435,26 @@ void PrintHorrorzontal()
 	cout << "\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B" << endl;
 }
 
+void HideStdinKeystrokes()
+{
+    termios tty;
+
+    tcgetattr(STDIN_FILENO, &tty);
+
+    /* we want to disable echo */
+    tty.c_lflag &= ~ECHO;
+
+    tcsetattr(STDIN_FILENO, TCSANOW, &tty);
+}
+
+void ShowStdinKeystrokes()
+{
+   termios tty;
+
+    tcgetattr(STDIN_FILENO, &tty);
+
+    /* we want to reenable echo */
+    tty.c_lflag |= ECHO;
+
+    tcsetattr(STDIN_FILENO, TCSANOW, &tty);
+}
