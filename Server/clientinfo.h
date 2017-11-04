@@ -89,6 +89,27 @@ class Client
                 send(socket, buffer, strlen(buffer),0);
             } while(check && (size != 0));
 
+            do
+            {
+                size = recv(socket, buffer, BUF-1, 0);
+                buffer[size - 1] = '\0';
+                temp = buffer;
+
+                if(temp == "y" || temp == "Y")
+                {
+                    check = false;
+                }
+                else if (temp == "n" || temp == "N")
+                {
+                    check = false;
+                }
+                else
+                {
+                    check = true;
+                }
+
+            }while(check);
+
             // Get subject
             // Repeat until input is valid (char limit)
             do

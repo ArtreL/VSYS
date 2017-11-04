@@ -8,6 +8,7 @@
 #include <string.h>
 #include <iostream>
 #include <termios.h>
+#include <fstream>
 #define BUF 1024
 
 using namespace std;
@@ -26,6 +27,11 @@ int main (int argc, char **argv)
 	int menu;
 	string temp;
 	int number_of_messages;
+    ifstream Attachment;
+    ofstream Attestment;
+    string att_content;
+    bool check = false;
+
 
 	// On missing arguments display usage error message
 	if(argc < 3){
@@ -132,13 +138,66 @@ int main (int argc, char **argv)
 						}
 					} while(temp == "ERR");
 
-					// Send object to server
+					do
+					{
+						cout << "Would you like to add an attachment? [Y/N] ";
+
+						// Send selection
+						fgets(buffer, BUF, stdin);
+						send(create_socket, buffer, strlen(buffer), 0);
+						temp = buffer;
+
+						if((temp == "y\n") || (temp == "Y\n"))
+						{
+							cout << "Please enter the path to the file you'd like to send: ";
+
+							// Send filepath
+							fgets(buffer, BUF, stdin);
+							temp = buffer;
+							temp[temp.length() - 1] = '\0';
+
+							Attachment.open(temp, ios_base::binary);
+
+							if(Attachment.is_open())
+							{
+								att_content = "";
+
+								while(getline(Attachment, temp))
+								{
+									att_content += temp;
+								}
+
+								Attestment.open("letssee.png");
+
+								Attestment << att_content;
+
+								Attestment.close();
+							}
+
+							Attachment.close();
+
+							check = false;
+						}
+						else if (temp == "n\n" || temp == "N\n")
+						{
+							cout << "No attachment will be added." << endl;
+							check = false;
+						}
+						else
+						{
+							cout << "dafuq?" << endl;
+							check = true;
+						}
+
+					}while(check);
+
+					// Send subject to server
 					// Repeat until server check returns OK
 					do
 					{
-						cout << "Please enter object: ";
+						cout << "Please enter subject: ";
 
-						// Send object
+						// Send subject
 						fgets(buffer, BUF, stdin);
 						send(create_socket, buffer, strlen(buffer), 0);
 
@@ -201,7 +260,7 @@ int main (int argc, char **argv)
                         number_of_messages = temp.length() > 0 ? stoi(temp) : 0;
                         PrintHorrorzontal();
 
-                        // Loop and receive sender and object from the server
+                        // Loop and receive sender and subject from the server
                         for(int i = 0; i < number_of_messages; ++i)
                         {
                             // Print messagenumber
@@ -218,7 +277,7 @@ int main (int argc, char **argv)
                             // Print sender
                             cout << ": Sender: " << temp;
 
-                            // Receive object from server
+                            // Receive subject from server
                             size = recv(create_socket, receiver, BUF-1, 0);
                             receiver[size] = '\0';
 
@@ -226,8 +285,8 @@ int main (int argc, char **argv)
                             send(create_socket, buffer, strlen(buffer), 0);
                             temp = receiver;
 
-                            // Print object
-                            cout << ", Object: " << temp << endl;
+                            // Print subject
+                            cout << ", Subject: " << temp << endl;
                         }
                     }
                     else
