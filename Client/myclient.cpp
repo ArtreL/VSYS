@@ -425,6 +425,7 @@ int main (int argc, char **argv)
 	return EXIT_SUCCESS;
 }
 
+// just some styling
 void PrintHorrorzontal()
 {
 	cout << "\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B";
@@ -435,6 +436,7 @@ void PrintHorrorzontal()
 	cout << "\e(0\x71\e(B\e(0\x71\e(B\e(0\x71\e(B" << endl;
 }
 
+// hide entered input, gets called before password is being typed
 void HideStdinKeystrokes()
 {
     termios tty;
@@ -447,6 +449,7 @@ void HideStdinKeystrokes()
     tcsetattr(STDIN_FILENO, TCSANOW, &tty);
 }
 
+// show entered input again after password has been entered
 void ShowStdinKeystrokes()
 {
    termios tty;

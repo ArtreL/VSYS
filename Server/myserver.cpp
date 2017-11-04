@@ -96,6 +96,7 @@ int main (int argc, char **argv)
 
         new_socket = accept (create_socket, (struct sockaddr *) &cliaddress, &addrlen);
 
+        // multithreading
         do
         {
             if(thread_flags[t_iterator] == 0)
@@ -111,6 +112,7 @@ int main (int argc, char **argv)
 
             for(int i = 0; i < 12; ++i)
             {
+                // variable to see used threads
                 // cout << "Flag #" << i << ": " << thread_flags[i] << endl;
 
                 if(thread_flags[i] == 1)
@@ -147,6 +149,7 @@ string StringToLower(char value[])
 	return output;
 }
 
+// used to do everything (basically), now most if it is being done in the clientinfo class
 void* BasicallyEverything(void *arg)
 {
     Client User = *(Client*) arg;
