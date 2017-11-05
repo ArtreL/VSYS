@@ -56,6 +56,7 @@ class Client
             string att_path = "";
             int att_length = 0;
             int att_loop = 0;
+            string att_export = "";
 
             string file_content = "";
             string file_substr = "";
@@ -121,6 +122,8 @@ class Client
                     buffer[size - 1] = '\0';
 
                     att_path = buffer; // Filename, parse out of path to file
+
+                    att_export = ", Attachment: " + att_path;
 
                     strncpy(buffer,"1", sizeof(buffer));
                     send(socket, buffer, strlen(buffer),0);
@@ -257,7 +260,7 @@ class Client
             ++message_number;
 
             // Build string to write with inputs and delimiters
-            file_output = "#***#" + to_string(message_number) + "#####" + this->username + "#####" + send_information[2] + "#####\n" + send_information[3];
+            file_output = "#***#" + to_string(message_number) + "#####" + this->username + "#####" + send_information[2] + att_export + "#####\n" + send_information[3];
 
             // Append string to existing content
             file_content += file_output;
@@ -388,6 +391,7 @@ class Client
             ofstream MessageOut;
             string temp;
             char buffer[BUF];
+            char receiver[BUF];
             int size;
 
             // Confirm READ case to client
@@ -425,7 +429,6 @@ class Client
 
                 // Extract number of posts from content
                 file_substr = "";
-
                 file_substr = file_content.substr(file_content.find("#***#") + 5, file_content.length());
                 file_substr = file_substr.substr(0, file_substr.find("#####"));
                 number_of_messages = file_substr.length() > 0 ? stoi(file_substr) : 0;
@@ -467,11 +470,12 @@ class Client
                     }
 
                     // Build a master string containing all values
-                    read_result = "Sender: " + read_sender + "\nsubject: " + read_subject + "\nMessage:" + read_message;
-                    cout << read_result << endl;
+                    read_result = "Sender: " + read_sender + "\nSubject: " + read_subject + "\nMessage:" + read_message;
 
                     // Receive OK from client to start sending
                     recv(socket, buffer, BUF-1, 0);
+
+                    string att_name = read_result.find("Attachment: ") != string::npos ? read_result.substr(read_result.find("Attachment: ") + 12, read_result.find("\nMessage:") - (read_result.find("Attachment: ") + 12)) : "";
 
                     // Send master string in 1024 Bit blocks until the master string is empty
                     while(read_result.length() > 1)
@@ -493,11 +497,60 @@ class Client
                         size = recv(socket, buffer, BUF-1, 0);
                     }
 
-                    cout << "OPERATION FINISHED\nWaiting for new Input...\n" << endl;
-
                     // Send FINISH to client so they can stop receiving data
                     strncpy(buffer, ".\n", sizeof(buffer));
                     send(socket, buffer, strlen(buffer),0);
+
+                    if(att_name != "")
+                    {
+                        MessageIn.open(path + username + "/" + att_name, ios_base::binary);
+
+                        if(MessageIn.is_open())
+                        {
+
+                            MessageIn.seekg (0, MessageIn.end);
+                            int length = MessageIn.tellg();
+                            MessageIn.seekg (0, MessageIn.beg);
+
+                            char* att_content = new char[length];
+
+                            MessageIn.read(att_content, length);
+
+                            MessageIn.close();
+
+                            int att_length = (length / BUF) + 1;
+
+                            strncpy(buffer, to_string(length).c_str(), sizeof(buffer));
+                            send(socket, buffer, strlen(buffer), 0);
+
+                            recv(socket, receiver, BUF-1, 0);
+
+                            int att_index = 0;
+                            int att_end = 0;
+
+                            // Send master string in 1024 Bit blocks until the master string is empty
+                            for(int i = 0; i < att_length; ++i)
+                            {
+                                att_end = (att_index + BUF) < length ? BUF : (length - att_index);
+                                copy(att_content + att_index, att_content + att_index + att_end, buffer + 0);
+                                att_index = att_index + BUF;
+
+                                send(socket, buffer, att_end, 0);
+
+                                recv(socket, receiver, BUF-1, 0);
+                            }
+
+                            delete att_content;
+                        }
+                        else
+                        {
+                            // Post number was not contained in current file
+                            strncpy(buffer, "ERR", sizeof(buffer));
+                            send(socket, buffer, strlen(buffer),0);
+                        }
+                    }
+
+                    cout << "OPERATION FINISHED\nWaiting for new Input...\n" << endl;
 
                     // Wait for OK from client
                     size = recv(socket, buffer, BUF-1, 0);

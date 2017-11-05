@@ -1,6 +1,7 @@
 /* myclient.cpp */
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
@@ -9,6 +10,7 @@
 #include <iostream>
 #include <termios.h>
 #include <fstream>
+#include <dirent.h> // Make Directory
 #define BUF 1024
 
 using namespace std;
@@ -28,8 +30,11 @@ int main (int argc, char **argv)
 	string temp;
 	int number_of_messages;
     ifstream Attachment;
-    ofstream Attestment;
+    ofstream Attoutment;
     bool check = false;
+    int att_length;
+    int att_loop;
+    int att_index;
 
 
 	// On missing arguments display usage error message
@@ -346,7 +351,7 @@ int main (int argc, char **argv)
 
                         if(temp != "ERR")
                         {
-                            temp = "";
+                            string read_content = "";
 
                             // Send OK to server to signal it to start sending
                             send(create_socket, buffer, strlen(buffer), 0);
@@ -364,17 +369,80 @@ int main (int argc, char **argv)
                                 {
                                     // Append received chunks to a temporary string
                                     // if they are legit pieces of information
-                                    temp += buffer;
+                                    read_content += buffer;
                                 }
 
                                 // Signal the server to send the next chunk
                                 send(create_socket, buffer, strlen(buffer), 0);
-                            } while((buffer[0] != '.') && (buffer[1] != '\n') && (temp != "ERR"));
+                            } while((buffer[0] != '.') && (buffer[1] != '\n') && (read_content != "ERR"));
+
+                            if(read_content.find("Attachment: ") != string::npos)
+                            {
+	                            string sender = read_content.substr(8, read_content.find('\n') - 8);
+	                            string att_name = read_content.substr(read_content.find("Attachment: ") + 12, read_content.find("\nMessage:") - (read_content.find("Attachment: ") + 12));
+
+
+	                            temp = sender + "/";
+			                    DIR* dir = opendir(temp.c_str());
+
+			                    // Check if msdirectory exists; if yes, good, if not, create it
+			                    if (dir)
+			                    {
+			                        /* Directory exists. */
+			                        closedir(dir);
+			                    }
+			                    else if (ENOENT == errno)
+			                    {
+			                        /* Directory does not exist. */
+			                        mkdir(temp.c_str(), 0777);
+			                    }
+
+			                    size = recv(create_socket, buffer, BUF-1, 0);
+			                    buffer[size] = '\0';
+			                    temp = buffer;
+
+			                    if(temp != "ERR")
+			                    {
+				                    att_length = stoi(temp);
+				                    att_loop = (att_length / BUF) + 1;
+
+				                    strncpy(buffer,"1", sizeof(buffer));
+				                    send(create_socket, buffer, strlen(buffer),0);
+
+				                    char* att_out = new char[att_length];
+				                    att_index = 0;
+
+				                    for(int i = 0; i < att_loop; ++i)
+				                    {
+				                        size = recv(create_socket, buffer, BUF, 0);
+
+				                        copy(buffer, buffer + size, att_out + att_index);
+				                        att_index = (att_index + size) < att_length ? (att_index + size) : (att_length - att_index);
+
+				                        strncpy(buffer,"1", sizeof(buffer));
+				                        send(create_socket, buffer, strlen(buffer), 0);
+				                    }
+
+				                    Attoutment.open(sender + "/" + att_name);
+
+				                    Attoutment.write(att_out, att_length);
+
+				                    Attoutment.close();
+
+				                    delete att_out;
+
+				                	cout << "OK: Attachment has been saved to your inbox." << endl;
+				                }
+				                else
+				                {
+				                	cout << "ERR: Could not open file." << endl;
+				                }
+				            }
 
                             PrintHorrorzontal();
 
                             // Print out the complete string containing all information
-                            cout << temp;
+                            cout << read_content;
 
                         	PrintHorrorzontal();
 
