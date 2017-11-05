@@ -29,7 +29,6 @@ int main (int argc, char **argv)
 	int number_of_messages;
     ifstream Attachment;
     ofstream Attestment;
-    string att_content;
     bool check = false;
 
 
@@ -153,6 +152,8 @@ int main (int argc, char **argv)
 
 							// Send filepath
 							fgets(buffer, BUF, stdin);
+							send(create_socket, buffer, strlen(buffer),0);
+							recv(create_socket, receiver, BUF-1, 0);
 							temp = buffer;
 							temp[temp.length() - 1] = '\0';
 
@@ -160,18 +161,39 @@ int main (int argc, char **argv)
 
 							if(Attachment.is_open())
 							{
-								att_content = "";
 
-								while(getline(Attachment, temp))
-								{
-									att_content += temp;
-								}
+							    Attachment.seekg (0, Attachment.end);
+							    int length = Attachment.tellg();
+							    Attachment.seekg (0, Attachment.beg);
 
-								Attestment.open("letssee.png");
+							    char* att_content = new char[length];
 
-								Attestment << att_content;
+							    Attachment.read(att_content, length);
 
-								Attestment.close();
+								int att_length = (length / BUF) + 1;
+
+                        		strncpy(buffer, to_string(length).c_str(), sizeof(buffer));
+								send(create_socket, buffer, strlen(buffer), 0);
+
+								recv(create_socket, receiver, BUF-1, 0);
+
+								int att_index = 0;
+								int att_end = 0;
+
+							    // Send master string in 1024 Bit blocks until the master string is empty
+			                    for(int i = 0; i < att_length; ++i)
+			                    {	
+                        			cout << i << endl;
+			                    	att_end = (att_index + BUF) < length ? BUF : (length - att_index);
+			                    	copy(att_content + att_index, att_content + att_index + att_end, buffer + 0);
+			                    	att_index = att_index + BUF;
+
+			                        send(create_socket, buffer, att_end, 0);
+
+									recv(create_socket, receiver, BUF-1, 0);
+			                    }
+
+								delete att_content;
 							}
 
 							Attachment.close();

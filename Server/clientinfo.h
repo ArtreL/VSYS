@@ -1,5 +1,7 @@
 #include <iostream>
 #include <ctime>
+#include <dirent.h> // Make Directory
+#include <chrono>
 #define BUF 1024
 
 #define LDAP_HOST "ldap.technikum-wien.at"
@@ -51,6 +53,9 @@ class Client
             string file_output = "";
             int message_number = 0;
             string user_regex = "^[a-zA-Z0-9]{1,8}$";
+            string att_path = "";
+            int att_length = 0;
+            int att_loop = 0;
 
             string file_content = "";
             string file_substr = "";
@@ -97,6 +102,63 @@ class Client
 
                 if(temp == "y" || temp == "Y")
                 {
+                    temp = path + send_information[1] + "/";
+                    DIR* dir = opendir(temp.c_str());    
+
+                    // Check if msdirectory exists; if yes, good, if not, create it
+                    if (dir)
+                    {
+                        /* Directory exists. */
+                        closedir(dir);
+                    }
+                    else if (ENOENT == errno)
+                    {
+                        /* Directory does not exist. */
+                        mkdir(temp.c_str(), 0777);
+                    }
+
+                    size = recv(socket, buffer, BUF-1, 0);
+                    buffer[size - 1] = '\0';
+
+                    att_path = buffer; // Filename, parse out of path to file
+
+                    strncpy(buffer,"1", sizeof(buffer));
+                    send(socket, buffer, strlen(buffer),0);
+
+                    size = recv(socket, buffer, BUF-1, 0);
+                    buffer[size] = '\0';                    
+                    temp = buffer;
+                    strncpy(buffer,"1", sizeof(buffer));
+                    send(socket, buffer, strlen(buffer),0);
+
+                    att_length = stoi(temp);
+                    att_loop = (att_length / BUF) + 1;
+
+                    char* att_out = new char[att_length];
+                    int att_index = 0;
+
+                    for(int i = 0; i < att_loop; ++i)
+                    {
+                        size = recv(socket, buffer, BUF, 0);
+                        cout << "Packagesize: " << size << ", att_index: " << att_index << endl;
+
+                        copy(buffer, buffer + size, att_out + att_index);
+                        att_index = (att_index + size) < att_length ? (att_index + size) : (att_length - att_index);
+
+                        strncpy(buffer,"1", sizeof(buffer));
+                        send(socket, buffer, strlen(buffer), 0);
+                    }
+
+                    MessageOut.open(path + send_information[1] + "/" + att_path);
+
+                    MessageOut.write(att_out, att_length);
+
+                    MessageOut.close();
+
+                    delete att_out;
+
+                    cout << "Attachment received" << endl;
+
                     check = false;
                 }
                 else if (temp == "n" || temp == "N")
@@ -415,7 +477,7 @@ class Client
                     while(read_result.length() > 1)
                     {
                         // Check if remaining string is longer than 1024 characters and use 1024 if it is
-                        read_subend = read_result.length() > BUF ? BUF : read_result.length();
+                        read_subend = read_result.length() > BUF ? (BUF - 1) : read_result.length();
 
                         // Write master string to temp string until char limit is reached
                         temp = read_result.substr(0, read_subend);
