@@ -123,6 +123,8 @@ class Client
 
                     att_path = buffer; // Filename, parse out of path to file
 
+                    att_path = to_string(time(0)) + "_" + ParseFileName(att_path);
+
                     att_export = ", Attachment: " + att_path;
 
                     strncpy(buffer,"1", sizeof(buffer));
@@ -135,7 +137,7 @@ class Client
                     send(socket, buffer, strlen(buffer),0);
 
                     att_length = stoi(temp);
-                    att_loop = (att_length / BUF) + 1;
+                    att_loop = att_length != 0 ? ((att_length / BUF) + 1) : 0;
 
                     char* att_out = new char[att_length];
                     int att_index = 0;
@@ -143,7 +145,7 @@ class Client
                     for(int i = 0; i < att_loop; ++i)
                     {
                         size = recv(socket, buffer, BUF, 0);
-                        cout << "Packagesize: " << size << ", att_index: " << att_index << endl;
+                        //cout << "Packagesize: " << size << ", att_index: " << att_index << endl;
 
                         copy(buffer, buffer + size, att_out + att_index);
                         att_index = (att_index + size) < att_length ? (att_index + size) : (att_length - att_index);
@@ -160,7 +162,7 @@ class Client
 
                     delete att_out;
 
-                    cout << "Attachment received" << endl;
+                    cout << "Attachment received: " << att_path << endl;
 
                     check = false;
                 }
@@ -217,7 +219,12 @@ class Client
                 {
                     temp += buffer;
                 }
-            } while((buffer[0] != '.') && (buffer[1] != '\n'));
+
+                if((buffer[0] == '.') && (buffer[1] == '\n'))
+                {
+                    break;
+                }
+            } while(1);
 
             // Remove file delimiters from input
             temp = CutFromString(temp, "#####");
@@ -405,6 +412,7 @@ class Client
 
             if(MessageIn.is_open())
             {
+                MessageIn.close();
                 // Send success message to client
                 temp = "OK";
                 strncpy(buffer,temp.c_str(), sizeof(buffer));
@@ -414,8 +422,9 @@ class Client
                 size = recv(socket, buffer, BUF-1, 0);
                 buffer[size - 1] = '\0';
                 temp = buffer;
-                read_postnumber = temp.length() > 0 ? stoi(temp) : 0;
+                read_postnumber = (temp.length() > 0) && (temp.length() < 11) && StringIsNumber(temp) ? stoi(temp) : 0;
 
+                MessageIn.open(path + this->username + ".txt");
                 // Fetch all content from file
                 file_content = "";
 
@@ -526,11 +535,11 @@ class Client
 
                             int att_index = 0;
                             int att_end = 0;
-                            cout << att_length << endl;
+                            // cout << att_length << endl;
                             // Send master string in 1024 Bit blocks until the master string is empty
                             for(int i = 0; i < att_length; ++i)
                             {
-                                if(i % 100 == 0) cout << i << endl;
+                                //if(i % 100 == 0) cout << i << endl;
                                 att_end = (att_index + BUF) < length ? BUF : (length - att_index);
                                 copy(att_content + att_index, att_content + att_index + att_end, buffer + 0);
                                 att_index = att_index + BUF;
@@ -553,7 +562,9 @@ class Client
                     cout << "OPERATION FINISHED\nWaiting for new Input...\n" << endl;
 
                     // Wait for OK from client
+                    cout << "vor recv" << endl;
                     size = recv(socket, buffer, BUF-1, 0);
+                    cout << "nach recv" << endl;
                 }
                 else
                 {
@@ -600,6 +611,7 @@ class Client
 
             if(MessageIn.is_open())
             {
+                MessageIn.close();
                 // Send success message to client
                 strncpy(buffer, "OK", sizeof(buffer));
                 send(socket, buffer, strlen(buffer),0);
@@ -608,8 +620,9 @@ class Client
                 size = recv(socket, buffer, BUF-1, 0);
                 buffer[size - 1] = '\0';
                 temp = buffer;
-                delete_postnumber = temp.length() > 0 ? stoi(temp) : 0;
+                delete_postnumber = temp.length() > 0 && (temp.length() < 11) && StringIsNumber(temp) ? stoi(temp) : 0;
 
+                MessageIn.open(path + this->username + ".txt");
                 // Fetch all content from file
                 file_content = "";
 
@@ -1103,5 +1116,28 @@ class Client
             MessageOut << file_content;
 
             MessageOut.close();
+        }
+
+        string ParseFileName(string fpath)
+        {
+            while(fpath.find('/') != string::npos)
+            {
+                fpath = fpath.substr(fpath.find('/') + 1);
+            }
+
+            return fpath;
+        }
+
+        bool StringIsNumber(string checkthis)
+        {
+            for(size_t i = 0; i < checkthis.length(); ++i)
+            {
+                if(!isdigit(checkthis[i]))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 };
