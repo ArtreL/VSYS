@@ -172,7 +172,6 @@ class Client
                 {
                     check = true;
                 }
-
             }while(check);
 
             // Get subject
@@ -189,7 +188,7 @@ class Client
                 temp = CutFromString(temp, "#***#");
 
                 // If input was empty, set it to default
-                temp = temp.length() == 0 ? "subject" : temp;
+                temp = StringNewlineOnly(temp) == 1 ? "subject" : temp;
 
                 send_information[2] = temp;
                 if(size > 81)
@@ -527,10 +526,11 @@ class Client
 
                             int att_index = 0;
                             int att_end = 0;
-
+                            cout << att_length << endl;
                             // Send master string in 1024 Bit blocks until the master string is empty
                             for(int i = 0; i < att_length; ++i)
                             {
+                                if(i % 100 == 0) cout << i << endl;
                                 att_end = (att_index + BUF) < length ? BUF : (length - att_index);
                                 copy(att_content + att_index, att_content + att_index + att_end, buffer + 0);
                                 att_index = att_index + BUF;
@@ -652,19 +652,26 @@ class Client
                     file_substr = file_content.substr(file_content.find("#####"), file_content.length());
 
                     // Loop through the content and write the parts not specified by the post number
-                    for(int i = 0; i < number_of_messages; ++i)
+                    for(int i = 1; i <= number_of_messages; ++i)
                     {
                         // If the current loop represents the second to last message,
                         // set find delimiter to the "last-post-delimiter"
-                        temp = (i + 2) == number_of_messages ? "#***#" : "##*##";
+                        temp = (i + 1) == number_of_messages ? "#***#" : "##*##";
 
                         // If the current loop represents the post specified by
                         // the given post number, don't append it to the string
-                        if((i + 1) != delete_postnumber)
+                        if(i != delete_postnumber)
                         {
                             // If i is the second to last of all messages, start it with
                             // the "last-post-delimiter"
-                            delete_output += (i + 2) >= number_of_messages ? "#***#" : "##*##";
+                            if(delete_postnumber == number_of_messages)
+                            {
+                                delete_output += (i + 1) == number_of_messages ? "#***#" : "##*##";
+                            }
+                            else
+                            {
+                                delete_output += i == number_of_messages ? "#***#" : "##*##";
+                            }
 
                             // Append current delete index to create a
                             // subsequent enumeration for the posts
@@ -819,7 +826,7 @@ class Client
             {
                 for(size_t i = 0; i < (input.length() - 1); ++i)
                 {
-                    nl_only = input[i] != '\n' ? 0 : nl_only;
+                    nl_only = (input[i] != '\n') && (input[i] != ' ') ? 0 : nl_only;
                 }
             }
 

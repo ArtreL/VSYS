@@ -411,9 +411,11 @@ int main (int argc, char **argv)
 
 				                    char* att_out = new char[att_length];
 				                    att_index = 0;
+				                    cout << att_loop << endl;
 
 				                    for(int i = 0; i < att_loop; ++i)
 				                    {
+                                		if(i % 100 == 0) cout << i << endl;
 				                        size = recv(create_socket, buffer, BUF, 0);
 
 				                        copy(buffer, buffer + size, att_out + att_index);
